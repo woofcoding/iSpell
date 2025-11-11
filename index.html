@@ -14,7 +14,6 @@
             padding: 20px;
             background-color: #f0f8ff; 
             color: #333;
-            /* Prevents strange scrolling/selection issues on iOS */
             -webkit-user-select: none; 
             user-select: none;
         }
@@ -26,7 +25,6 @@
             width: 90%;
             max-width: 650px; 
             text-align: center;
-            /* Ensure container is not buried */
             z-index: 10; 
             position: relative;
         }
@@ -89,15 +87,20 @@
             border: 2px solid #ccc;
             border-radius: 8px;
             text-align: center;
-            /* Crucial for iOS/Android: ensure input is tappable */
             z-index: 20; 
             position: relative;
         }
         
-        /* Button Group - Desktop */
-        #button-group {
+        /* Button Group - Desktop: This group is shown on larger screens */
+        #button-group-desktop {
             margin-bottom: 20px;
         }
+        
+        /* Mobile buttons are initially hidden on desktop */
+        #button-container-mobile {
+            display: none; 
+        }
+
         button {
             padding: 12px 18px;
             font-size: 1.1em;
@@ -106,14 +109,13 @@
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s;
-            /* Crucial for iOS: ensure buttons are tappable */
             z-index: 20; 
             position: relative;
         }
-        #speakWordButton { background-color: #ff9900; color: white; }
-        #speakWordButton:hover { background-color: #e68a00; }
-        #speakSentenceButton { background-color: #008CBA; color: white; }
-        #speakSentenceButton:hover { background-color: #007bb5; }
+        .speak-word-btn { background-color: #ff9900; color: white; }
+        .speak-word-btn:hover { background-color: #e68a00; }
+        .speak-sentence-btn { background-color: #008CBA; color: white; }
+        .speak-sentence-btn:hover { background-color: #007bb5; }
         
         /* Continue Button */
         #continueButton { 
@@ -137,7 +139,21 @@
                 padding: 15px 10px; 
             }
             
-            /* Crucial input element */
+            /* Hide Desktop Button Group on Mobile */
+            #button-group-desktop {
+                display: none; 
+            }
+
+            /* Show Mobile Button Container on Mobile */
+            #button-container-mobile {
+                display: flex;
+                flex-direction: column;
+                width: 90%;
+                margin: 0 auto;
+                z-index: 20; 
+                position: relative;
+            }
+            
             #wordInput {
                 padding: 10px; 
                 margin: 5px 0 10px 0; 
@@ -146,20 +162,6 @@
                 order: 1; 
             }
             
-            /* Desktop button group is hidden */
-            #button-group {
-                display: none; 
-            }
-            
-            /* Mobile button container for crucial actions and input */
-            #button-container-mobile {
-                display: flex;
-                flex-direction: column;
-                width: 90%;
-                margin: 0 auto;
-                z-index: 20; /* Ensure buttons are above potential keyboard overlay layers */
-                position: relative;
-            }
             #button-container-mobile button {
                 width: 100%; 
                 margin: 4px 0; 
@@ -168,7 +170,6 @@
             
             #submitButton { display: none !important; }
 
-            /* Continue button must appear above message on mobile to avoid keyboard cover */
             #continueButton {
                 order: 3;
                 margin-top: 10px; 
@@ -181,7 +182,6 @@
                 margin-bottom: 0;
             }
 
-            /* Secondary buttons (Hear Word/Context) (order 4 on mobile) */
             #secondary-buttons-mobile {
                 display: flex;
                 justify-content: space-between;
@@ -189,7 +189,7 @@
                 order: 4; 
                 margin-top: 15px;
             }
-            #speakWordButton, #speakSentenceButton {
+            .speak-word-btn, .speak-sentence-btn {
                 width: 49%;
                 margin: 0 0.5%;
             }
@@ -226,14 +226,14 @@
             <button id="continueButton">➡️ Continue</button> 
 
             <div id="secondary-buttons-mobile">
-                <button id="speakWordButton">🔊 Hear Word</button>
-                <button id="speakSentenceButton">📖 Context</button>
+                <button class="speak-word-btn" id="speakWordButton">🔊 Hear Word</button>
+                <button class="speak-sentence-btn" id="speakSentenceButton">📖 Context</button>
             </div>
         </div>
         
-        <div id="button-group">
-            <button id="speakWordButton_desktop">🔊 Hear Word</button>
-            <button id="speakSentenceButton_desktop">📖 Context</button>
+        <div id="button-group-desktop">
+            <button class="speak-word-btn" id="speakWordButtonDesktop">🔊 Hear Word</button>
+            <button class="speak-sentence-btn" id="speakSentenceButtonDesktop">📖 Context</button>
         </div>
 
         <button id="submitButton" style="display: none;">✅ Submit Answer</button>
@@ -286,21 +286,23 @@
     let resultsLog = []; 
     let initialized = false; 
 
+    // --- ELEMENT SELECTION ---
     const progressEl = document.getElementById('progress');
     const scoreEl = document.getElementById('score');
     const progressBarContainerEl = document.getElementById('progressBarContainer');
     const inputEl = document.getElementById('wordInput');
     const messageEl = document.getElementById('message');
-    const speakWordButtonEl = document.getElementById('speakWordButton');
-    const speakSentenceButtonEl = document.getElementById('speakSentenceButton'); 
     const continueButtonEl = document.getElementById('continueButton');
     const testInterfaceEl = document.getElementById('test-interface');
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
     const contextDisplayEl = document.getElementById('contextDisplay'); 
     const statusAreaEl = document.getElementById('status-area');
     
-    const speakWordDesktopEl = document.getElementById('speakWordButton_desktop');
-    const speakSentenceDesktopEl = document.getElementById('speakSentenceButton_desktop');
+    // Select both mobile and desktop buttons by their specific IDs for event listeners
+    const speakWordButtonMobileEl = document.getElementById('speakWordButton');
+    const speakSentenceButtonMobileEl = document.getElementById('speakSentenceButton'); 
+    const speakWordButtonDesktopEl = document.getElementById('speakWordButtonDesktop');
+    const speakSentenceButtonDesktopEl = document.getElementById('speakSentenceButtonDesktop');
 
 
     // --- 2. SPEECH SYNTHESIS SETUP ---
@@ -325,7 +327,7 @@
     }
 
     function speakWord() {
-        // NEW: Ensure initialization happens before speaking
+        // Ensures initialization happens on the first user interaction
         initSpeech(); 
         if (currentWordIndex >= spellingList.length) return;
         
@@ -369,10 +371,10 @@
     // --- 3. TEST LOGIC ---
 
     function toggleButtons(enable) {
-        speakWordButtonEl.disabled = !enable;
-        speakSentenceButtonEl.disabled = !enable;
-        if (speakWordDesktopEl) speakWordDesktopEl.disabled = !enable;
-        if (speakSentenceDesktopEl) speakSentenceDesktopEl.disabled = !enable;
+        speakWordButtonMobileEl.disabled = !enable;
+        speakSentenceButtonMobileEl.disabled = !enable;
+        speakWordButtonDesktopEl.disabled = !enable;
+        speakSentenceButtonDesktopEl.disabled = !enable;
         inputEl.disabled = !enable;
     }
 
@@ -491,21 +493,19 @@
             displayResults(); 
 
             // Set up restart button
-            speakWordButtonEl.textContent = 'Start New Test';
-            speakWordButtonEl.onclick = () => window.location.reload(); 
-            speakWordButtonEl.style.backgroundColor = '#4a7d97';
+            speakWordButtonMobileEl.textContent = 'Start New Test';
+            speakWordButtonMobileEl.onclick = () => window.location.reload(); 
+            speakWordButtonMobileEl.style.backgroundColor = '#4a7d97';
             
-            speakSentenceButtonEl.style.display = 'none';
-            document.getElementById('button-group').style.display = 'none';
+            speakSentenceButtonMobileEl.style.display = 'none';
+            document.getElementById('button-group-desktop').style.display = 'none';
             document.getElementById('secondary-buttons-mobile').style.display = 'none';
         }
     }
     
-    // NEW: Function to handle the very first speech initiation
     function initSpeech() {
         if (!initialized) {
             initialized = true;
-            // The audio will be handled by the current button click/key press that called this function
             updateProgress(); 
         }
     }
@@ -513,12 +513,12 @@
     // --- 4. EVENT LISTENERS ---
     
     // Mobile Buttons
-    speakWordButtonEl.addEventListener('click', speakWord);
-    speakSentenceButtonEl.addEventListener('click', speakSentence); 
+    speakWordButtonMobileEl.addEventListener('click', speakWord);
+    speakSentenceButtonMobileEl.addEventListener('click', speakSentence); 
     
     // Desktop Buttons
-    speakWordDesktopEl.addEventListener('click', speakWord);
-    speakSentenceDesktopEl.addEventListener('click', speakSentence);
+    speakWordButtonDesktopEl.addEventListener('click', speakWord);
+    speakSentenceButtonDesktopEl.addEventListener('click', speakSentence);
 
     // Enter Key is the primary submission method
     inputEl.addEventListener('keypress', function(e) {
@@ -527,7 +527,6 @@
             if (continueButtonEl.style.display === 'inline-block') {
                 continueButtonEl.click();
             } else if (!inputEl.disabled) { 
-                // Call initSpeech here for the case where the user hits Enter first
                 initSpeech(); 
                 checkSpelling();
             }
