@@ -28,15 +28,17 @@
             margin-bottom: 25px;
         }
         
-            .corner-woofs {
-      position: fixed;
-      top: 8px;
-      right: 8px;
-      width: 10px;   /* change size here */
-      height: 10px;
-      z-index: 9999; /* sit above other content */
-      pointer-events: none; /* so clicks pass through (optional) */
-    }
+        /* Fixed selector and sizing for the corner image */
+        .corner-woofs {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            width: 48px;       /* desired visible size */
+            max-width: 10vh;   /* caps size relative to viewport for very small screens */
+            height: auto;      /* preserve aspect ratio */
+            z-index: 9999;     /* sit above other content */
+            pointer-events: none; /* so clicks pass through (optional) */
+        }
         
         /* NEW: Score and Progress Styling */
         #status-area {
@@ -503,6 +505,3 @@
 
 </body>
 </html>
-
-
-
