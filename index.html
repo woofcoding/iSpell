@@ -61,12 +61,14 @@
         }
 
         /* NEW: Score and Progress Styling */
+        /* center these blocks so they match the centered input/buttons */
         #status-area {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%; /* Will be adjusted by JS */
-            margin-bottom: 10px;
+            width: 100%; /* Will be overridden by JS to match input width */
+            margin: 0 auto 10px; /* center it horizontally */
+            box-sizing: border-box;
         }
         #score {
             font-weight: bold;
@@ -77,13 +79,14 @@
             color: #4a7d97;
         }
         #progressBarContainer {
-            width: 100%; /* Will be adjusted by JS to match input width */
+            width: 100%; /* Will be overridden by JS to match input width */
             display: flex; /* Use flexbox for segments */
             background-color: #e0e0e0;
             border-radius: 5px;
             height: 15px;
-            margin-bottom: 25px;
+            margin: 0 auto 25px; /* center it horizontally */
             overflow: hidden; /* Ensures segments don't overflow rounded corners */
+            box-sizing: border-box;
         }
         .progressSegment {
             flex-grow: 1; /* Each segment takes equal space */
@@ -285,7 +288,7 @@
     
     const progressEl = document.getElementById('progress');
     const scoreEl = document.getElementById('score');
-    const progressBarContainerEl = document.getElementById('progressBarContainer'); // Changed from progressBarEl
+    const progressBarContainerEl = document.getElementById('progressBarContainer');
     const inputEl = document.getElementById('wordInput');
     const messageEl = document.getElementById('message');
     const speakWordButtonEl = document.getElementById('speakWordButton');
@@ -308,7 +311,6 @@
 
     // initialize UI state of checkbox
     soundToggleEl.checked = soundEnabled;
-    // update label text for clarity (optional)
     const soundLabelEl = document.getElementById('soundLabel');
     soundLabelEl.textContent = soundEnabled ? 'Sound effects' : 'Sound effects (off)';
 
@@ -319,7 +321,6 @@
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        // Try to resume if suspended (browsers often start suspended until a user gesture)
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume().catch(() => {});
         }
@@ -335,13 +336,12 @@
         }
         const now = ctx.currentTime;
 
-        // single pleasant rising chime
         const o = ctx.createOscillator();
         const gain = ctx.createGain();
 
         o.type = 'sine';
-        o.frequency.setValueAtTime(880, now); // start
-        o.frequency.exponentialRampToValueAtTime(1320, now + 0.14); // rise
+        o.frequency.setValueAtTime(880, now);
+        o.frequency.exponentialRampToValueAtTime(1320, now + 0.14);
 
         gain.gain.setValueAtTime(0.0, now);
         gain.gain.linearRampToValueAtTime(0.25, now + 0.01);
@@ -363,7 +363,6 @@
         }
         const now = ctx.currentTime;
 
-        // short low "buzz" + a discordant sting
         const o1 = ctx.createOscillator();
         const o2 = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -372,7 +371,7 @@
         o1.frequency.setValueAtTime(220, now);
 
         o2.type = 'sine';
-        o2.frequency.setValueAtTime(270, now); // dissonant interval
+        o2.frequency.setValueAtTime(270, now);
 
         gain.gain.setValueAtTime(0.0, now);
         gain.gain.linearRampToValueAtTime(0.22, now + 0.01);
@@ -395,7 +394,6 @@
         soundLabelEl.textContent = soundEnabled ? 'Sound effects' : 'Sound effects (off)';
 
         if (!soundEnabled && audioCtx && audioCtx.state !== 'closed') {
-            // suspend audio context to free resources
             audioCtx.suspend().catch(() => {});
         } else if (soundEnabled && audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume().catch(() => {});
@@ -411,7 +409,6 @@
                null; 
     }
     
-    // Helper function to create the Utterance with UK voice settings
     function createUtterance(text) {
         const utterance = new SpeechSynthesisUtterance(text);
         const ukVoice = getUKVoice();
@@ -436,7 +433,6 @@
         inputEl.focus(); 
     }
     
-    // Helper function to safely escape regex characters
     function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
     }
@@ -470,11 +466,13 @@
         inputEl.disabled = !enable;
     }
 
-    // NEW: Adjusts the progress bar and status area width to match input
+    // NEW: Adjusts the progress bar and status area width to match input and centers them
     function adjustProgressBarWidth() {
         const inputWidth = inputEl.offsetWidth;
         progressBarContainerEl.style.width = `${inputWidth}px`;
+        progressBarContainerEl.style.margin = '0 auto 25px';
         statusAreaEl.style.width = `${inputWidth}px`;
+        statusAreaEl.style.margin = '0 auto 10px';
     }
 
     // NEW: Updates the score display and the segmented progress bar
@@ -518,7 +516,7 @@
         inputEl.focus(); 
         
         updateScoreAndProgress();
-        adjustProgressBarWidth(); // Call to adjust width
+        adjustProgressBarWidth(); // Call to adjust width and center
     }
 
     function checkSpelling() {
@@ -544,18 +542,14 @@
         toggleButtons(false); 
 
         if (isCorrect) {
-            // Play correct sound (only if enabled)
             playCorrectSound();
-
             score++;
             messageEl.textContent = "✅ Correct! Moving to the next word...";
             currentWordIndex++;
             updateScoreAndProgress(); 
             setTimeout(nextStep, 1000); 
         } else {
-            // Play wrong sound (only if enabled)
             playWrongSound();
-
             messageEl.textContent = `❌ Incorrect. The correct spelling was: "${correctWord}".`;
             currentWordIndex++;
             updateScoreAndProgress(); 
@@ -608,7 +602,6 @@
     // --- 4. EVENT LISTENERS ---
     
     speakWordButtonEl.addEventListener('click', function() {
-        // create/resume audio context only if sound is enabled
         if (soundEnabled) ensureAudioContext();
         speakWord();
     });
@@ -630,7 +623,6 @@
     inputEl.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault(); 
-            // Enter is a user gesture — only create/resume audio if enabled
             if (soundEnabled) ensureAudioContext();
             if (continueButtonEl.style.display === 'inline-block') {
                 continueButtonEl.click();
@@ -645,7 +637,7 @@
 
     // --- 5. INITIALISATION ---
     updateProgress();
-    // warm-up speech after a short delay (no audio context creation here; speakWord uses speechSynthesis)
+    // warm-up speech after a short delay
     setTimeout(speakWord, 500); 
     
 </script>
