@@ -122,28 +122,60 @@
     // ======================
     const weeksData = [
       {
-        id: "2025-11-11",
-        label: "Week of 11 Nov 2025",
-        date: "2025-11-11",
+        id: "2025-10-23",
+        label: "Set 23 Oct — Test Fri 7 Nov 2025",
+        date: "2025-10-23",
+        words: [
+          { word: "rhyme", sentence: "The children learned a funny rhyme to help remember the spelling." },
+          { word: "secretary", sentence: "The secretary typed up the meeting minutes quickly." },
+          { word: "sincere", sentence: "He made a sincere apology after accidentally breaking the vase." },
+          { word: "sufficient", sentence: "We have sufficient pencils for everyone in the class." },
+          { word: "system", sentence: "The school's heating system was repaired over the holidays." },
+          { word: "rhythm", sentence: "She clapped the rhythm of the song perfectly in music class." },
+          { word: "shoulder", sentence: "He carried the bag on his shoulder as he walked home." },
+          { word: "soldier", sentence: "The soldier marched bravely in the parade." },
+          { word: "suggest", sentence: "May I suggest a different book for the class reading?" },
+          { word: "temperature", sentence: "The nurse took my temperature before I returned to class." },
+          { word: "sacrifice", sentence: "They made a small sacrifice of their break time to finish the experiment." },
+          { word: "signature", sentence: "Please write your signature at the bottom of the form." },
+          { word: "stomach", sentence: "Her stomach rumbled loudly during the quiet assembly." },
+          { word: "symbol", sentence: "The dove is often used as a symbol of peace." },
+          { word: "thorough", sentence: "Make a thorough check of your answers before handing them in." },
+          { word: "twelfth", sentence: "This is the twelfth question on the worksheet." },
+          { word: "variety", sentence: "The market sold a variety of fresh fruits and snacks." },
+          { word: "vegetable", sentence: "He chose one vegetable from the tray for his soup." },
+          { word: "vehicle", sentence: "A large vehicle delivered the new desks to the school." },
+          { word: "sincerely", sentence: "She finished the letter with 'Yours sincerely' and signed her name." }
+        ]
+      },
+      {
+        id: "2025-11-07",
+        label: "Set 7 Nov — Test Fri 14 Nov 2025",
+        date: "2025-11-07",
         words: [
           { word: "observant", sentence: "The traffic warden was very observant and spotted the illegal parking." },
           { word: "hesitant", sentence: "She was hesitant to answer the question, taking a long pause first." },
           { word: "tolerance", sentence: "The garden grows well because of its high tolerance to frost." },
-          { word: "decent", sentence: "I hope you have a decent amount of money saved for the trip." }
-          // ... add the rest for the week
-        ]
-      },
-      {
-        id: "2025-11-04",
-        label: "Week of 4 Nov 2025",
-        date: "2025-11-04",
-        words: [
+          { word: "decent", sentence: "I hope you have a decent amount of money saved for the trip." },
+          { word: "frequency", sentence: "The bus runs at a high frequency, arriving every fifteen minutes." },
+          { word: "observance", sentence: "The observance of rules is critical for safety." },
+          { word: "hesitancy", sentence: "His slight hesitancy gave the opposition time to think." },
+          { word: "innocent", sentence: "The court decided the boy was innocent of the crime." },
+          { word: "decency", sentence: "The children were taught common decency, like saying please and thank you." },
+          { word: "confident", sentence: "She felt confident in her ability to pass the difficult exam." },
+          { word: "expectant", sentence: "The whole crowd was expectant as the singer walked onto the stage." },
+          { word: "tolerant", sentence: "We must be tolerant of other people's views, even if we disagree." },
+          { word: "innocence", sentence: "He maintained his innocence throughout the long trial." },
           { word: "frequent", sentence: "Frequent visits to the library improved her reading skills." },
           { word: "confidence", sentence: "Winning the tournament boosted the team's confidence." },
-          { word: "assistant", sentence: "The shop assistant helped the customer find the correct size." }
+          { word: "assistant", sentence: "The shop assistant helped the customer find the correct size." },
+          { word: "assistance", sentence: "The old man requested assistance with his heavy bags." },
+          { word: "obedient", sentence: "The soldier was obedient and followed all the orders given." },
+          { word: "independent", sentence: "She became independent after moving out of her family home." },
+          { word: "independence", sentence: "The country celebrated its day of independence from foreign rule." }
         ]
       }
-      // add additional week objects here
+      // Add additional week objects here as needed
     ];
 
     // ----------------------
@@ -420,7 +452,7 @@
       continueButtonEl.style.display = 'none';
       // show week selector again so teacher can pick a new week (or to view/change)
       weekBarEl.style.display = 'flex';
-      // ensure Start Again visible
+      // ensure Start Again is visible
       startAgainButtonEl.style.display = 'inline-block';
     }
 
