@@ -641,10 +641,13 @@
             restartButtonEl.style.display = 'inline-block';
             startAgainButtonEl.style.display = 'inline-block';
 
-            // Convert speakWord button into a "Start New Test" affordance in case user returns to test interface later
+            // Convert speakWord button into a "Start New Test" affordance (only while on results)
             speakWordButtonEl.textContent = 'Start New Test';
+            // override onclick so a user who clicks this starts a fresh test from results
             speakWordButtonEl.onclick = () => resetAndStartImmediate();
             speakWordButtonEl.style.backgroundColor = '#4a7d97';
+
+            // hide sentence/submit while on results
             speakSentenceButtonEl.style.display = 'none';
             submitButtonEl.style.display = 'none';
             continueButtonEl.style.display = 'none';
@@ -655,6 +658,16 @@
     function startTest() {
         // create/resume audio context on user gesture if sound is enabled
         if (soundEnabled) ensureAudioContext();
+
+        // Ensure UI buttons are restored to default state for a fresh run
+        speakWordButtonEl.textContent = '🔊 Hear Word';
+        speakWordButtonEl.style.backgroundColor = '#ff9900';
+        // remove onclick override if set (so addEventListener handlers remain active)
+        speakWordButtonEl.onclick = null;
+
+        speakSentenceButtonEl.style.display = 'inline-block';
+        submitButtonEl.style.display = 'inline-block';
+        continueButtonEl.style.display = 'none';
 
         startScreenEl.style.display = 'none';
         resultsEl.style.display = 'none';
@@ -681,6 +694,15 @@
         score = 0;
         resultsLog = [];
         resultsTableBodyEl.innerHTML = '';
+
+        // restore speakWord button in case it was changed
+        speakWordButtonEl.textContent = '🔊 Hear Word';
+        speakWordButtonEl.style.backgroundColor = '#ff9900';
+        speakWordButtonEl.onclick = null;
+
+        speakSentenceButtonEl.style.display = 'inline-block';
+        submitButtonEl.style.display = 'inline-block';
+        continueButtonEl.style.display = 'none';
 
         // restore UI
         testInterfaceEl.style.display = 'none';
