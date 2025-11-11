@@ -1,11 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spelling Test</title> 
+    <title>Year 6 Custom Spelling Test</title>
     <style>
-        /* --- BASE STYLES (Desktop/Tablet) --- */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -14,9 +14,6 @@
             padding: 20px;
             background-color: #f0f8ff; 
             color: #333;
-            /* iOS/Touch Fixes */
-            -webkit-user-select: none; 
-            user-select: none;
         }
         #container {
             background-color: white;
@@ -26,48 +23,51 @@
             width: 90%;
             max-width: 650px; 
             text-align: center;
-            z-index: 10; 
-            position: relative;
+        }
+        h1 {
+            color: #4a7d97;
+            margin-bottom: 25px;
         }
         
-        /* Status and Progress Area */
+        /* NEW: Score and Progress Styling */
         #status-area {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%; 
+            width: 100%; /* Will be adjusted by JS */
             margin-bottom: 10px;
         }
         #score {
             font-weight: bold;
-            color: #1a7d32;
+            color: #1a7d32; /* Dark Green */
         }
         #progress {
             font-weight: bold;
             color: #4a7d97;
         }
         #progressBarContainer {
-            width: 100%; 
-            display: flex; 
+            width: 100%; /* Will be adjusted by JS to match input width */
+            display: flex; /* Use flexbox for segments */
             background-color: #e0e0e0;
             border-radius: 5px;
             height: 15px;
             margin-bottom: 25px;
-            overflow: hidden; 
+            overflow: hidden; /* Ensures segments don't overflow rounded corners */
         }
         .progressSegment {
-            flex-grow: 1;
-            background-color: #ccc;
+            flex-grow: 1; /* Each segment takes equal space */
+            background-color: #ccc; /* Default for not yet completed */
             transition: background-color 0.3s ease-in-out;
         }
         .progressSegment.correct {
-            background-color: #4CAF50;
+            background-color: #4CAF50; /* Green */
         }
         .progressSegment.incorrect {
-            background-color: #f44336;
+            background-color: #f44336; /* Red */
         }
+        /* End NEW Styling */
 
-        /* Context and Input */
+
         #contextDisplay {
             min-height: 40px;
             margin: 10px 0 20px 0;
@@ -83,25 +83,16 @@
         #wordInput {
             padding: 15px;
             margin: 15px 0;
-            width: 80%; 
+            width: 80%; /* Base width */
             font-size: 1.5em;
             border: 2px solid #ccc;
             border-radius: 8px;
             text-align: center;
-            z-index: 20; 
-            position: relative;
         }
-        
-        /* Button Group - Desktop: This group is shown on larger screens */
-        #button-group-desktop {
+        /* Button Styling remains the same */
+        #button-group {
             margin-bottom: 20px;
         }
-        
-        /* Mobile buttons are initially hidden on desktop */
-        #button-container-mobile {
-            display: none; 
-        }
-
         button {
             padding: 12px 18px;
             font-size: 1.1em;
@@ -110,22 +101,37 @@
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s;
-            z-index: 20; 
-            position: relative;
         }
-        .speak-word-btn { background-color: #ff9900; color: white; }
-        .speak-word-btn:hover { background-color: #e68a00; }
-        .speak-sentence-btn { background-color: #008CBA; color: white; }
-        .speak-sentence-btn:hover { background-color: #007bb5; }
-        
-        /* Continue Button */
-        #continueButton { 
+        #speakWordButton {
+            background-color: #ff9900;
+            color: white;
+        }
+        #speakWordButton:hover {
+            background-color: #e68a00;
+        }
+        #speakSentenceButton {
+            background-color: #008CBA; 
+            color: white;
+        }
+        #speakSentenceButton:hover {
+            background-color: #007bb5;
+        }
+        #submitButton {
+            background-color: #4CAF50; 
+            color: white;
+        }
+        #submitButton:hover {
+            background-color: #45a049;
+        }
+        #continueButton {
             background-color: #f44336; 
-            color: white; 
+            color: white;
             display: none; 
             margin-top: 15px; 
         }
-        #continueButton:hover { background-color: #d32f2f; }
+        #continueButton:hover {
+            background-color: #d32f2f;
+        }
 
         #message {
             margin-top: 20px;
@@ -134,80 +140,42 @@
             min-height: 25px;
         }
 
-        /* --- MOBILE OPTIMIZATION (Max screen width 600px) --- */
-        @media (max-width: 600px) {
-            #container {
-                padding: 15px 10px; 
-            }
-            
-            /* Hide Desktop Button Group on Mobile */
-            #button-group-desktop {
-                display: none; 
-            }
-
-            /* Show Mobile Button Container on Mobile */
-            #button-container-mobile {
-                display: flex;
-                flex-direction: column;
-                width: 90%;
-                margin: 0 auto;
-                z-index: 20; 
-                position: relative;
-            }
-            
-            #wordInput {
-                padding: 10px; 
-                margin: 5px 0 10px 0; 
-                width: 90%; 
-                font-size: 1.3em;
-                order: 1; 
-            }
-            
-            #button-container-mobile button {
-                width: 100%; 
-                margin: 4px 0; 
-                font-size: 1em;
-            }
-            
-            #submitButton { display: none !important; }
-
-            #continueButton {
-                order: 3;
-                margin-top: 10px; 
-                display: none; 
-            }
-            
-            #message {
-                order: 2; 
-                margin-top: 10px; 
-                margin-bottom: 0;
-            }
-
-            #secondary-buttons-mobile {
-                display: flex;
-                justify-content: space-between;
-                width: 100%;
-                order: 4; 
-                margin-top: 15px;
-            }
-            .speak-word-btn, .speak-sentence-btn {
-                width: 49%;
-                margin: 0 0.5%;
-            }
+        /* Results Styling */
+        #results {
+            margin-top: 30px;
+            text-align: left;
+            width: 100%;
+            display: none; 
         }
-        /* Results Styling remains the same */
-        #results { margin-top: 30px; text-align: left; width: 100%; display: none; }
-        #results h2 { color: #4a7d97; margin-bottom: 15px; }
-        #resultsTable { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        #resultsTable th, #resultsTable td { border: 1px solid #ddd; padding: 10px; }
-        #resultsTable th { background-color: #f2f2f2; text-align: center; }
-        .correct { background-color: #e6ffe6; }
-        .incorrect { background-color: #ffe6e6; }
+        #results h2 {
+            color: #4a7d97;
+            margin-bottom: 15px;
+        }
+        #resultsTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        #resultsTable th, #resultsTable td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        #resultsTable th {
+            background-color: #f2f2f2;
+            text-align: center;
+        }
+        .correct {
+            background-color: #e6ffe6; 
+        }
+        .incorrect {
+            background-color: #ffe6e6; 
+        }
     </style>
 </head>
 <body>
 
 <div id="container">
+    <h1>📝 Weekly Spelling Test</h1>
     
     <div id="test-interface">
         
@@ -215,29 +183,21 @@
             <p id="progress">Word 1 of 20</p>
             <p id="score">Score: 0 / 0</p>
         </div>
-        <div id="progressBarContainer"></div>
+        <div id="progressBarContainer">
+            </div>
         
         <div id="contextDisplay"></div>
         
-        <div id="button-container-mobile">
-            <input type="text" id="wordInput" placeholder="Type the word here..." autofocus>
-            
-            <div id="message"></div>
-            
-            <button id="continueButton">➡️ Continue</button> 
-
-            <div id="secondary-buttons-mobile">
-                <button class="speak-word-btn" id="speakWordButton">🔊 Hear Word</button>
-                <button class="speak-sentence-btn" id="speakSentenceButton">📖 Context</button>
-            </div>
-        </div>
+        <input type="text" id="wordInput" placeholder="Type the word here..." autofocus>
         
-        <div id="button-group-desktop">
-            <input type="text" id="wordInputDesktop" placeholder="Type the word here..." autofocus style="display: none;"> <button class="speak-word-btn" id="speakWordButtonDesktop">🔊 Hear Word</button>
-            <button class="speak-sentence-btn" id="speakSentenceButtonDesktop">📖 Context</button>
+        <div id="button-group">
+            <button id="speakWordButton">🔊 Hear Word</button>
+            <button id="speakSentenceButton">📖 Hear Sentence</button>
+            <button id="submitButton">✅ Submit Answer</button>
         </div>
 
-        <button id="submitButton" style="display: none;">✅ Submit Answer</button>
+        <div id="message"></div>
+        <button id="continueButton">➡️ Continue</button> 
     </div>
     
     <div id="results">
@@ -251,7 +211,8 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody>
+                </tbody>
         </table>
     </div>
 </div>
@@ -285,26 +246,21 @@
     let currentWordIndex = 0;
     let score = 0;
     let resultsLog = []; 
-    let initialized = false; 
-
-    // --- ELEMENT SELECTION ---
+    
     const progressEl = document.getElementById('progress');
     const scoreEl = document.getElementById('score');
-    const progressBarContainerEl = document.getElementById('progressBarContainer');
-    // We use the mobile input for the main logic as it's the element that receives focus/input on both views
-    const inputEl = document.getElementById('wordInput'); 
+    const progressBarContainerEl = document.getElementById('progressBarContainer'); // Changed from progressBarEl
+    const inputEl = document.getElementById('wordInput');
     const messageEl = document.getElementById('message');
+    const speakWordButtonEl = document.getElementById('speakWordButton');
+    const speakSentenceButtonEl = document.getElementById('speakSentenceButton');
+    const submitButtonEl = document.getElementById('submitButton');
     const continueButtonEl = document.getElementById('continueButton');
     const testInterfaceEl = document.getElementById('test-interface');
+    const resultsEl = document.getElementById('results');
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
     const contextDisplayEl = document.getElementById('contextDisplay'); 
     const statusAreaEl = document.getElementById('status-area');
-    
-    // Select both mobile and desktop buttons by their specific IDs for event listeners
-    const speakWordButtonMobileEl = document.getElementById('speakWordButton');
-    const speakSentenceButtonMobileEl = document.getElementById('speakSentenceButton'); 
-    const speakWordButtonDesktopEl = document.getElementById('speakWordButtonDesktop');
-    const speakSentenceButtonDesktopEl = document.getElementById('speakSentenceButtonDesktop');
 
 
     // --- 2. SPEECH SYNTHESIS SETUP ---
@@ -316,6 +272,7 @@
                null; 
     }
     
+    // Helper function to create the Utterance with UK voice settings
     function createUtterance(text) {
         const utterance = new SpeechSynthesisUtterance(text);
         const ukVoice = getUKVoice();
@@ -329,8 +286,6 @@
     }
 
     function speakWord() {
-        // Ensures initialization happens on the first user interaction
-        initSpeech(); 
         if (currentWordIndex >= spellingList.length) return;
         
         const word = spellingList[currentWordIndex].word;
@@ -338,17 +293,16 @@
         
         messageEl.textContent = "🔊 Speaking the word...";
         contextDisplayEl.style.display = 'none'; 
-        continueButtonEl.style.display = 'none'; 
         speechSynthesis.speak(utterance);
         inputEl.focus(); 
     }
     
+    // Helper function to safely escape regex characters
     function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
     }
 
     function speakSentence() {
-        initSpeech();
         if (currentWordIndex >= spellingList.length) return;
 
         const item = spellingList[currentWordIndex];
@@ -362,9 +316,7 @@
         
         contextDisplayEl.innerHTML = blankedSentence;
         contextDisplayEl.style.display = 'block';
-        messageEl.textContent = "📖 Speaking the context sentence...";
-        
-        continueButtonEl.style.display = 'none'; 
+        messageEl.textContent = "📖 Speaking the sentence context...";
 
         speechSynthesis.speak(utterance);
         inputEl.focus(); 
@@ -373,32 +325,20 @@
     // --- 3. TEST LOGIC ---
 
     function toggleButtons(enable) {
-        speakWordButtonMobileEl.disabled = !enable;
-        speakSentenceButtonMobileEl.disabled = !enable;
-        speakWordButtonDesktopEl.disabled = !enable;
-        speakSentenceButtonDesktopEl.disabled = !enable;
+        submitButtonEl.disabled = !enable;
+        speakWordButtonEl.disabled = !enable;
+        speakSentenceButtonEl.disabled = !enable;
         inputEl.disabled = !enable;
     }
 
+    // NEW: Adjusts the progress bar and status area width to match input
     function adjustProgressBarWidth() {
-        // Use requestAnimationFrame to ensure we measure after any layout changes
-        requestAnimationFrame(() => {
-            const inputWidth = inputEl.offsetWidth;
-            // Only set width if input is visible (prevents errors on hidden elements)
-            if (inputWidth > 0) {
-                 progressBarContainerEl.style.width = `${inputWidth}px`;
-                 statusAreaEl.style.width = `${inputWidth}px`;
-            } else {
-                 // Fallback for desktop view if mobile input is hidden (unlikely with this setup)
-                 const desktopGroup = document.getElementById('button-group-desktop');
-                 if (desktopGroup.offsetWidth > 0) {
-                     progressBarContainerEl.style.width = `${desktopGroup.offsetWidth}px`;
-                     statusAreaEl.style.width = `${desktopGroup.offsetWidth}px`;
-                 }
-            }
-        });
+        const inputWidth = inputEl.offsetWidth;
+        progressBarContainerEl.style.width = `${inputWidth}px`;
+        statusAreaEl.style.width = `${inputWidth}px`;
     }
 
+    // NEW: Updates the score display and the segmented progress bar
     function updateScoreAndProgress() {
         const wordsCompleted = resultsLog.length;
         const totalWords = spellingList.length;
@@ -409,6 +349,147 @@
             progressEl.textContent = `Word ${currentWordIndex + 1} of ${totalWords}`;
         }
 
+        // Clear existing segments
         progressBarContainerEl.innerHTML = '';
+
+        // Create a segment for each word
         for (let i = 0; i < totalWords; i++) {
-            const
+            const segment = document.createElement('div');
+            segment.classList.add('progressSegment');
+            if (i < wordsCompleted) {
+                // If this word has been completed, color it
+                const result = resultsLog[i];
+                if (result.isCorrect) {
+                    segment.classList.add('correct');
+                } else {
+                    segment.classList.add('incorrect');
+                }
+            }
+            progressBarContainerEl.appendChild(segment);
+        }
+    }
+
+    function updateProgress() {
+        inputEl.value = '';
+        messageEl.textContent = '';
+        contextDisplayEl.textContent = '';
+        contextDisplayEl.style.display = 'none';
+        continueButtonEl.style.display = 'none'; 
+        toggleButtons(true); 
+        inputEl.focus(); 
+        
+        updateScoreAndProgress();
+        adjustProgressBarWidth(); // Call to adjust width
+    }
+
+    function checkSpelling() {
+        if (currentWordIndex >= spellingList.length) return;
+
+        const typedWord = inputEl.value.trim();
+        const correctWord = spellingList[currentWordIndex].word;
+        const isCorrect = typedWord.toLowerCase() === correctWord.toLowerCase();
+
+        if (typedWord === "") {
+            messageEl.textContent = "⚠️ Please type a word first!";
+            return;
+        }
+        
+        // Log the result
+        resultsLog.push({
+            index: currentWordIndex + 1,
+            correctWord: correctWord,
+            submittedWord: typedWord,
+            isCorrect: isCorrect
+        });
+        
+        toggleButtons(false); 
+
+        if (isCorrect) {
+            score++;
+            messageEl.textContent = "✅ Correct! Moving to the next word...";
+            currentWordIndex++;
+            updateScoreAndProgress(); 
+            setTimeout(nextStep, 1000); 
+        } else {
+            messageEl.textContent = `❌ Incorrect. The correct spelling was: "${correctWord}".`;
+            currentWordIndex++;
+            updateScoreAndProgress(); 
+            continueButtonEl.style.display = 'inline-block';
+            continueButtonEl.focus(); 
+        }
+    }
+
+    function displayResults() {
+        testInterfaceEl.style.display = 'none';
+        resultsEl.style.display = 'block';
+
+        resultsLog.forEach(log => {
+            const row = resultsTableBodyEl.insertRow();
+            row.className = log.isCorrect ? 'correct' : 'incorrect';
+
+            const cell1 = row.insertCell(); cell1.textContent = log.index;
+            const cell2 = row.insertCell(); cell2.textContent = log.submittedWord;
+            const cell3 = row.insertCell(); cell3.textContent = log.correctWord;
+            const cell4 = row.insertCell(); cell4.textContent = log.isCorrect ? 'Correct' : 'Incorrect';
+        });
+    }
+
+    function nextStep() {
+        if (currentWordIndex < spellingList.length) {
+            updateProgress();
+            speakWord();
+        } else {
+            // Test Finished!
+            progressEl.textContent = "TEST FINISHED!";
+            scoreEl.textContent = `Final Score: ${score} / ${spellingList.length}`;
+            messageEl.textContent = `🎉 You scored ${score} out of ${spellingList.length}! Great effort!`;
+            
+            // Ensure the final state of the progress bar reflects all words
+            updateScoreAndProgress(); 
+
+            displayResults(); 
+
+            speakWordButtonEl.textContent = 'Start New Test';
+            speakWordButtonEl.onclick = () => window.location.reload(); 
+            speakWordButtonEl.style.backgroundColor = '#4a7d97';
+            speakWordButtonEl.style.display = 'inline-block';
+            
+            speakSentenceButtonEl.style.display = 'none';
+            submitButtonEl.style.display = 'none';
+            continueButtonEl.style.display = 'none'; 
+        }
+    }
+
+    // --- 4. EVENT LISTENERS ---
+    
+    speakWordButtonEl.addEventListener('click', speakWord);
+    speakSentenceButtonEl.addEventListener('click', speakSentence); 
+    submitButtonEl.addEventListener('click', checkSpelling);
+    
+    continueButtonEl.addEventListener('click', function() {
+        nextStep();
+        inputEl.focus(); 
+    });
+    
+    inputEl.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); 
+            if (continueButtonEl.style.display === 'inline-block') {
+                continueButtonEl.click();
+            } else if (!submitButtonEl.disabled) {
+                checkSpelling();
+            }
+        }
+    });
+
+    // Adjust width on window resize
+    window.addEventListener('resize', adjustProgressBarWidth);
+
+    // --- 5. INITIALISATION ---
+    updateProgress();
+    setTimeout(speakWord, 500); 
+    
+</script>
+
+</body>
+</html>
