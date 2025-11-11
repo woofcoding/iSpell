@@ -11,9 +11,10 @@
     h1{color:var(--accent);margin:0 0 10px}
     /* corner image */
     .corner-woofs{position:absolute;top:12px;right:12px;width:48px;height:auto;pointer-events:none}
-    /* sound toggle */
-    .sound-toggle{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:8px;font-size:.95rem;color:#555;user-select:none}
-    .sound-toggle input{width:18px;height:18px;cursor:pointer}
+    /* controls in top-left */
+    .top-controls{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:8px;z-index:11}
+    .toggle-row{display:flex;align-items:center;gap:8px;font-size:.95rem;color:#555;user-select:none}
+    .toggle-row input{width:18px;height:18px;cursor:pointer}
     /* week selector area */
     #weekBar{display:flex;align-items:center;gap:12px;margin:8px 0 18px;flex-wrap:wrap;justify-content:center}
     #weekBar label{font-weight:600;color:#555}
@@ -39,7 +40,8 @@
     #speakWordButton{background:#ff9900;color:#fff}
     #speakSentenceButton{background:var(--accent);color:#fff}
     #submitButton{background:var(--ok);color:#fff}
-    #continueButton{background:var(--bad);color:#fff;display:none;margin-top:8px}
+    /* Center the continue button when visible */
+    #continueButton{background:var(--bad);color:#fff;display:none;margin:12px auto 0; /* centered */ padding:10px 14px}
     #message{margin-top:14px;text-align:center;font-weight:700;min-height:26px}
     /* results */
     #results{margin-top:22px;text-align:left;display:none}
@@ -49,15 +51,23 @@
     .correct{background:#e6ffe6}
     .incorrect{background:#ffe6e6}
     #startAgainButton{margin-top:12px;background:var(--ok);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;float:right}
+    #menuButton{margin-top:12px;background:#4a7d97;color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;float:left}
     @media (max-width:640px){ #status-area,#progressBarContainer,#wordInput{width:95%} }
   </style>
 </head>
 <body>
   <div id="container">
     <img class="corner-woofs" src="Woofs.png" alt="Woofs">
-    <label class="sound-toggle" for="soundToggle">
-      <input id="soundToggle" type="checkbox"> <span id="soundLabel">Sound effects</span>
-    </label>
+
+    <!-- top-left toggles: sound and show-sentence -->
+    <div class="top-controls" aria-hidden="false">
+      <label class="toggle-row" for="soundToggle">
+        <input id="soundToggle" type="checkbox" /> <span id="soundLabel">Sound effects</span>
+      </label>
+      <label class="toggle-row" for="showSentenceToggle">
+        <input id="showSentenceToggle" type="checkbox" /> <span id="showSentenceLabel">Show sentence</span>
+      </label>
+    </div>
 
     <h1>📝 Weekly Spelling Test</h1>
 
@@ -110,6 +120,7 @@
         <tbody></tbody>
       </table>
 
+      <button id="menuButton">Menu</button>
       <button id="startAgainButton">Start Again</button>
     </div>
   </div>
@@ -117,8 +128,6 @@
   <script>
     // ======================
     // WEEKS DATA (easy to update)
-    // Add each week's object here. Each week has an id, label, date (YYYY-MM-DD) and words array.
-    // To add a new week: append another object to the weeksData array.
     // ======================
     const weeksData = [
       {
@@ -175,14 +184,13 @@
           { word: "independence", sentence: "The country celebrated its day of independence from foreign rule." }
         ]
       }
-      // Add additional week objects here as needed
     ];
 
     // ----------------------
-    // Basic app state and DOM refs
+    // DOM refs & state
     // ----------------------
-    let spellingList = [];           // currently loaded week's words
-    let currentWeek = null;          // current week object
+    let spellingList = [];
+    let currentWeek = null;
     let currentWordIndex = 0;
     let score = 0;
     let resultsLog = [];
@@ -209,14 +217,21 @@
     const resultsEl = document.getElementById('results');
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
     const startAgainButtonEl = document.getElementById('startAgainButton');
+    const menuButtonEl = document.getElementById('menuButton');
 
-    // sound toggle
+    // toggles
     const soundToggleEl = document.getElementById('soundToggle');
+    const showSentenceToggleEl = document.getElementById('showSentenceToggle');
     const SOUND_KEY = 'spellingSoundEnabled';
+    const SHOW_SENTENCE_KEY = 'spellingShowSentence';
     let soundEnabled = localStorage.getItem(SOUND_KEY) === null ? true : localStorage.getItem(SOUND_KEY) === 'true';
+    let showSentenceEnabled = localStorage.getItem(SHOW_SENTENCE_KEY) === null ? true : localStorage.getItem(SHOW_SENTENCE_KEY) === 'true';
     soundToggleEl.checked = soundEnabled;
+    showSentenceToggleEl.checked = showSentenceEnabled;
     const soundLabelEl = document.getElementById('soundLabel');
+    const showSentenceLabelEl = document.getElementById('showSentenceLabel');
     soundLabelEl.textContent = soundEnabled ? 'Sound effects' : 'Sound effects (off)';
+    showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence' : 'Show sentence (off)';
 
     soundToggleEl.addEventListener('change', () => {
       soundEnabled = soundToggleEl.checked;
@@ -226,17 +241,24 @@
       else if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
     });
 
+    showSentenceToggleEl.addEventListener('change', () => {
+      showSentenceEnabled = showSentenceToggleEl.checked;
+      localStorage.setItem(SHOW_SENTENCE_KEY, String(showSentenceEnabled));
+      showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence' : 'Show sentence (off)';
+      // update display for current word immediately
+      if (testInterfaceEl.style.display !== 'none') {
+        if (showSentenceEnabled) displayBlankedSentence(currentWordIndex);
+        else { document.getElementById('contextDisplay').style.display = 'none'; }
+      }
+    });
+
     // ======================
-    // VOICE / AUDIO helpers
+    // Voice / audio
     // ======================
-    // deterministic UK voice selection so the voice doesn't change mid-run
     let selectedUKVoice = null;
-    let voicesLoaded = false;
     function loadVoices() {
       const voices = speechSynthesis.getVoices() || [];
       if (!voices.length) return;
-      voicesLoaded = true;
-      // Prefer a UK voice; prefer names including "Female" if present
       selectedUKVoice =
         voices.find(v => v.lang && v.lang.toLowerCase().includes('en-gb') && /female/i.test(v.name)) ||
         voices.find(v => v.lang && v.lang.toLowerCase().includes('en-gb')) ||
@@ -247,16 +269,12 @@
 
     function createUtterance(text) {
       const u = new SpeechSynthesisUtterance(text);
-      if (selectedUKVoice) {
-        u.voice = selectedUKVoice;
-        u.rate = 0.9;
-      } else {
-        u.lang = 'en-GB';
-      }
+      if (selectedUKVoice) { u.voice = selectedUKVoice; u.rate = 0.9; }
+      else u.lang = 'en-GB';
       return u;
     }
 
-    // WebAudio for short correct/incorrect sounds
+    // WebAudio for feedback
     let audioCtx = null;
     function ensureAudioContext() {
       if (!soundEnabled) return null;
@@ -267,8 +285,7 @@
     function playCorrectSound() {
       if (!soundEnabled) return;
       const ctx = ensureAudioContext(); if (!ctx) return;
-      const now = ctx.currentTime;
-      const o = ctx.createOscillator(); const g = ctx.createGain();
+      const now = ctx.currentTime; const o = ctx.createOscillator(); const g = ctx.createGain();
       o.type='sine'; o.frequency.setValueAtTime(880, now); o.frequency.exponentialRampToValueAtTime(1320, now+0.14);
       g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.25, now+0.01); g.gain.exponentialRampToValueAtTime(0.001, now+0.5);
       o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now+0.6);
@@ -276,13 +293,11 @@
     function playWrongSound() {
       if (!soundEnabled) return;
       const ctx = ensureAudioContext(); if (!ctx) return;
-      const now = ctx.currentTime;
-      const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+      const now = ctx.currentTime; const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
       o1.type='sawtooth'; o1.frequency.setValueAtTime(220, now);
       o2.type='sine'; o2.frequency.setValueAtTime(270, now);
       g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.22, now+0.01); g.gain.exponentialRampToValueAtTime(0.001, now+0.5);
-      o1.connect(g); o2.connect(g); g.connect(ctx.destination);
-      o1.start(now); o2.start(now+0.02); o1.stop(now+0.45); o2.stop(now+0.45);
+      o1.connect(g); o2.connect(g); g.connect(ctx.destination); o1.start(now); o2.start(now+0.02); o1.stop(now+0.45); o2.stop(now+0.45);
     }
 
     // ======================
@@ -290,7 +305,6 @@
     // ======================
     function populateWeekSelect() {
       weekSelectEl.innerHTML = '';
-      // sort weeks by date ascending
       const sorted = weeksData.slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
       for (const w of sorted) {
         const opt = document.createElement('option');
@@ -298,22 +312,18 @@
         opt.textContent = `${w.label} — ${w.date}`;
         weekSelectEl.appendChild(opt);
       }
-      // pick most relevant week by default
       const defaultIndex = findMostRelevantWeekIndex(sorted);
       weekSelectEl.selectedIndex = defaultIndex;
       loadWeek(sorted[defaultIndex]);
     }
 
-    // choose the most relevant week:
-    // prefer the latest week with date <= today; if none, choose the most recent (last in list)
     function findMostRelevantWeekIndex(sortedWeeks) {
-      const today = new Date();
-      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const today = new Date(); const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       let candidate = -1;
       for (let i = 0; i < sortedWeeks.length; i++) {
         const d = new Date(sortedWeeks[i].date);
         if (isNaN(d)) continue;
-        if (d <= todayOnly) candidate = i; // keep last <= today
+        if (d <= todayOnly) candidate = i;
       }
       if (candidate !== -1) return candidate;
       return sortedWeeks.length ? sortedWeeks.length - 1 : 0;
@@ -324,23 +334,19 @@
       if (week) loadWeek(week);
     }
 
-    // apply week to UI and internal state (does NOT auto-start the test)
     function loadWeek(week) {
       currentWeek = week;
-      spellingList = week.words.slice(); // copy
+      spellingList = week.words.slice();
       weekLabelEl.textContent = week.label || '';
       weekDateEl.textContent = week.date || '';
       document.title = `Year 6 Spelling Test — ${week.label || week.date || ''}`;
-      resetToStartScreen(); // show start screen so teacher confirms before starting
-      buildProgressBar(); // initialise empty progress bar for this week
+      resetToStartScreen();
+      buildProgressBar();
     }
-
-    weekSelectEl.addEventListener('change', (e)=> {
-      loadWeekById(e.target.value);
-    });
+    weekSelectEl.addEventListener('change', (e)=> loadWeekById(e.target.value));
 
     // ======================
-    // Core test logic (start/submit/progress/results)
+    // Core test logic
     // ======================
     function buildProgressBar() {
       progressBarContainerEl.innerHTML = '';
@@ -350,35 +356,44 @@
         progressBarContainerEl.appendChild(seg);
       }
     }
-
     function updateScoreAndProgress() {
       const wordsCompleted = resultsLog.length;
       scoreEl.textContent = `Score: ${score} / ${wordsCompleted}`;
       if (currentWordIndex < spellingList.length) progressEl.textContent = `Word ${currentWordIndex + 1} of ${spellingList.length}`;
-      // color segments
       const segments = progressBarContainerEl.children;
       for (let i=0;i<segments.length;i++){
         segments[i].className = 'progressSegment';
         if (i < resultsLog.length) segments[i].classList.add(resultsLog[i].isCorrect ? 'correct' : 'incorrect');
       }
     }
-
     function toggleButtons(enable){
       submitButtonEl.disabled = !enable;
       speakWordButtonEl.disabled = !enable;
       speakSentenceButtonEl.disabled = !enable;
       inputEl.disabled = !enable;
     }
-
     function updateProgressScreen() {
       inputEl.value = '';
       messageEl.textContent = '';
-      document.getElementById('contextDisplay').textContent = '';
-      document.getElementById('contextDisplay').style.display = 'none';
+      const ctx = document.getElementById('contextDisplay');
+      ctx.textContent = '';
+      ctx.style.display = 'none';
       continueButtonEl.style.display = 'none';
       toggleButtons(true);
       inputEl.focus();
       updateScoreAndProgress();
+      // If "Show sentence" is enabled, display blanked sentence for the current word (but do not speak it)
+      if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
+    }
+
+    function displayBlankedSentence(index) {
+      const ctx = document.getElementById('contextDisplay');
+      if (!spellingList || index == null || index >= spellingList.length) { ctx.style.display = 'none'; return; }
+      const item = spellingList[index];
+      const regex = new RegExp(escapeRegExp(item.word), 'gi');
+      const blanked = item.sentence.replace(regex, '______');
+      ctx.innerHTML = blanked;
+      ctx.style.display = 'block';
     }
 
     function speakWord() {
@@ -389,6 +404,8 @@
       document.getElementById('contextDisplay').style.display = 'none';
       speechSynthesis.speak(utt);
       inputEl.focus();
+      // If show-sentence is enabled, display the blanked sentence (but don't read it)
+      if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
     }
 
     function speakSentence() {
@@ -396,8 +413,9 @@
       const item = spellingList[currentWordIndex];
       const regex = new RegExp(escapeRegExp(item.word), 'gi');
       const blanked = item.sentence.replace(regex, '______');
-      document.getElementById('contextDisplay').innerHTML = blanked;
-      document.getElementById('contextDisplay').style.display = 'block';
+      const ctx = document.getElementById('contextDisplay');
+      ctx.innerHTML = blanked;
+      ctx.style.display = 'block';
       messageEl.textContent = "📖 Speaking the sentence context...";
       speechSynthesis.speak(createUtterance(item.sentence));
       inputEl.focus();
@@ -413,8 +431,22 @@
       const isCorrect = typed.toLowerCase() === correct.toLowerCase();
       resultsLog.push({ index: currentWordIndex+1, submittedWord: typed, correctWord: correct, isCorrect });
       toggleButtons(false);
-      if (isCorrect) { playCorrectSound(); score++; messageEl.textContent = "✅ Correct!"; currentWordIndex++; updateScoreAndProgress(); setTimeout(nextStep, 700); }
-      else { playWrongSound(); messageEl.textContent = `❌ Incorrect — correct: "${correct}".`; currentWordIndex++; updateScoreAndProgress(); continueButtonEl.style.display='inline-block'; continueButtonEl.focus(); }
+      if (isCorrect) {
+        playCorrectSound();
+        score++;
+        messageEl.textContent = "✅ Correct!";
+        currentWordIndex++;
+        updateScoreAndProgress();
+        setTimeout(nextStep, 700);
+      } else {
+        playWrongSound();
+        messageEl.textContent = `❌ Incorrect — correct: "${correct}".`;
+        currentWordIndex++;
+        updateScoreAndProgress();
+        // Show centered Continue button when incorrect
+        continueButtonEl.style.display = 'block';
+        continueButtonEl.focus();
+      }
     }
 
     function nextStep(){
@@ -446,14 +478,15 @@
       messageEl.textContent = `🎉 You scored ${score} out of ${spellingList.length}!`;
       updateScoreAndProgress();
       displayResults();
-      // Keep Hear Word button behavior unchanged; hide sentence/submit during results
+      // hide sentence/submit while on results
       speakSentenceButtonEl.style.display = 'none';
       submitButtonEl.style.display = 'none';
       continueButtonEl.style.display = 'none';
-      // show week selector again so teacher can pick a new week (or to view/change)
-      weekBarEl.style.display = 'flex';
-      // ensure Start Again is visible
+      // Hide week selector on results (user requested Menu/Home instead of selector on results)
+      weekBarEl.style.display = 'none';
+      // show Start Again and Menu
       startAgainButtonEl.style.display = 'inline-block';
+      menuButtonEl.style.display = 'inline-block';
     }
 
     // start/reset helpers
@@ -461,18 +494,17 @@
       if (soundEnabled) ensureAudioContext();
       // hide week selector once the test starts
       weekBarEl.style.display = 'none';
-      // restore UI if previously hidden
+      // restore UI
       speakSentenceButtonEl.style.display = 'inline-block';
       submitButtonEl.style.display = 'inline-block';
       continueButtonEl.style.display = 'none';
       startScreenEl.style.display = 'none';
       resultsEl.style.display = 'none';
       testInterfaceEl.style.display = 'block';
-      // reset state for selected week
+      // reset state
       currentWordIndex = 0;
       score = 0;
       resultsLog = [];
-      // ensure progress bar matches list length
       buildProgressBar();
       updateProgressScreen();
       // speak first word automatically
@@ -480,7 +512,6 @@
     }
 
     function resetToStartScreen() {
-      // reset state but do not auto-start
       currentWordIndex = 0;
       score = 0;
       resultsLog = [];
@@ -491,6 +522,10 @@
       startScreenEl.style.display = 'flex';
       // show week selector on start screen
       weekBarEl.style.display = 'flex';
+      // hide menu button while on start screen
+      menuButtonEl.style.display = 'none';
+      // hide startAgain until needed
+      startAgainButtonEl.style.display = 'none';
     }
 
     function resetAndStartImmediate() { resetToStartScreen(); setTimeout(startTest, 80); }
@@ -501,13 +536,14 @@
     startButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); startTest(); });
     speakWordButtonEl.addEventListener('click', ()=> {
       if (soundEnabled) ensureAudioContext();
-      // if test isn't visible, start defensively
       if (testInterfaceEl.style.display === 'none') { startTest(); return; }
       speakWord();
     });
     speakSentenceButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); speakSentence(); });
     submitButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); checkSpelling(); });
     continueButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); nextStep(); inputEl.focus(); });
+    startAgainButtonEl.addEventListener('click', resetAndStartImmediate);
+    menuButtonEl.addEventListener('click', resetToStartScreen);
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -517,15 +553,17 @@
       }
     });
 
-    startAgainButtonEl.addEventListener('click', resetAndStartImmediate);
-
     // ======================
     // Initialization
     // ======================
-    // populate weeks and select default
     populateWeekSelect();
-    // make sure Start Again is hidden initially
+    // initial toggle/button visibility
     startAgainButtonEl.style.display = 'none';
+    menuButtonEl.style.display = 'none';
+    // Default: show sentence toggle on by default (persisted above)
+    if (showSentenceToggleEl.checked) {
+      showSentenceToggleEl.dispatchEvent(new Event('change'));
+    }
   </script>
 </body>
 </html>
