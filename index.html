@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Year 6 Custom Spelling Test</title>
+    <title>Year 6 Spelling Test</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -229,17 +229,17 @@
             background-color: #ffe6e6;
         }
 
-        /* small restart button in results */
-        #restartButton {
+        /* Start Again button in results (single control) */
+        #startAgainButton {
             margin-top: 18px;
-            background-color: #4a7d97;
+            background-color: #4CAF50;
             color: #fff;
             padding: 10px 14px;
             border-radius: 8px;
             border: none;
             cursor: pointer;
         }
-        #restartButton:hover { filter: brightness(0.95); }
+        #startAgainButton:hover { filter: brightness(0.95); }
     </style>
 </head>
 <body>
@@ -256,7 +256,7 @@
 
     <!-- START SCREEN: clearer way to start -->
     <div id="startScreen" aria-hidden="false">
-        <p>Press Start to begin the timed spelling test. You can hear each word and its sentence context.</p>
+        <p>Press Start to begin the spelling test. You can hear each word and its sentence context.</p>
         <button id="startButton" class="primary-action" aria-label="Start Test">Start Test</button>
         <p style="font-size:0.95rem;color:#666">Tip: press Enter once the test starts to submit answers quickly.</p>
     </div>
@@ -298,8 +298,7 @@
         </table>
 
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-            <button id="restartButton">🔁 Restart Test</button>
-            <button id="startAgainButton" style="background:#4CAF50;color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;">Start Again</button>
+            <button id="startAgainButton">Start Again</button>
         </div>
     </div>
 </div>
@@ -352,7 +351,6 @@
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
     const contextDisplayEl = document.getElementById('contextDisplay');
     const statusAreaEl = document.getElementById('status-area');
-    const restartButtonEl = document.getElementById('restartButton');
     const startAgainButtonEl = document.getElementById('startAgainButton');
 
     // Sound toggle control
@@ -637,17 +635,11 @@
 
             displayResults();
 
-            // Make restart buttons visible (already present) and ensure they behave intuitively
-            restartButtonEl.style.display = 'inline-block';
+            // show the single "Start Again" control in results
             startAgainButtonEl.style.display = 'inline-block';
 
-            // Convert speakWord button into a "Start New Test" affordance (only while on results)
-            speakWordButtonEl.textContent = 'Start New Test';
-            // override onclick so a user who clicks this starts a fresh test from results
-            speakWordButtonEl.onclick = () => resetAndStartImmediate();
-            speakWordButtonEl.style.backgroundColor = '#4a7d97';
-
-            // hide sentence/submit while on results
+            // Keep the "Hear Word" button behavior unchanged (no label override)
+            // Hide sentence/submit controls while on results
             speakSentenceButtonEl.style.display = 'none';
             submitButtonEl.style.display = 'none';
             continueButtonEl.style.display = 'none';
@@ -662,7 +654,6 @@
         // Ensure UI buttons are restored to default state for a fresh run
         speakWordButtonEl.textContent = '🔊 Hear Word';
         speakWordButtonEl.style.backgroundColor = '#ff9900';
-        // remove onclick override if set (so addEventListener handlers remain active)
         speakWordButtonEl.onclick = null;
 
         speakSentenceButtonEl.style.display = 'inline-block';
@@ -711,7 +702,7 @@
         startButtonEl.focus();
     }
 
-    // Reset then immediately start (used by restart from results)
+    // Reset then immediately start (used by Start Again on results)
     function resetAndStartImmediate() {
         resetToStartScreen();
         // small delay to ensure layout/framing complete
@@ -745,8 +736,7 @@
         inputEl.focus();
     });
 
-    // Restart controls on results
-    restartButtonEl.addEventListener('click', resetToStartScreen);
+    // Start Again control on results
     startAgainButtonEl.addEventListener('click', resetAndStartImmediate);
 
     // Enter behaviour: when on start screen Enter starts test; when in test Enter submits
@@ -768,9 +758,7 @@
     });
 
     // Sound toggle already wired earlier
-    soundToggleEl.addEventListener('change', () => {
-        // handled above; keep preference saved
-    });
+    soundToggleEl.addEventListener('change', () => { /* persisted earlier */ });
 
     // Adjust width on window resize
     window.addEventListener('resize', adjustProgressBarWidth);
