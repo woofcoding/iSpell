@@ -1,342 +1,208 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Test 14-Nov-25</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            background-color: #f0f8ff;
-            color: #333;
-        }
-        /* Make container a positioned element so absolutely positioned children are placed relative to it */
-        #container {
-            position: relative;
-            background-color: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 650px;
-            text-align: center;
-        }
-        h1 {
-            color: #4a7d97;
-            margin-bottom: 25px;
-        }
-
-        /* Position the image inside the white container in the top-right corner */
-        .corner-woofs {
-            position: absolute;   /* placed relative to #container */
-            top: 12px;            /* adjust to move up/down inside the container */
-            right: 12px;          /* adjust to move left/right inside the container */
-            width: 64px;          /* desired visible size */
-            height: auto;         /* preserve aspect ratio */
-            z-index: 10;          /* above container content */
-            pointer-events: none; /* so clicks pass through (optional) */
-        }
-
-        /* Sound toggle styling (small control in top-left of container) */
-        .sound-toggle {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            z-index: 11;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
-            color: #555;
-            user-select: none;
-        }
-        .sound-toggle input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        /* START SCREEN */
-        #startScreen {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        #startScreen p {
-            margin: 0;
-            color: #555;
-        }
-        .primary-action {
-            padding: 14px 22px;
-            font-size: 1.15rem;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-        }
-        .primary-action:hover { filter: brightness(0.95); }
-
-        /* NEW: Score and Progress Styling */
-        /* center these blocks so they match the centered input/buttons */
-        #status-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%; /* Will be overridden by JS to match input width */
-            margin: 0 auto 10px; /* center it horizontally */
-            box-sizing: border-box;
-        }
-        #score {
-            font-weight: bold;
-            color: #1a7d32; /* Dark Green */
-        }
-        #progress {
-            font-weight: bold;
-            color: #4a7d97;
-        }
-        #progressBarContainer {
-            width: 100%; /* Will be overridden by JS to match input width */
-            display: flex; /* Use flexbox for segments */
-            background-color: #e0e0e0;
-            border-radius: 5px;
-            height: 15px;
-            margin: 0 auto 25px; /* center it horizontally */
-            overflow: hidden; /* Ensures segments don't overflow rounded corners */
-            box-sizing: border-box;
-        }
-        .progressSegment {
-            flex-grow: 1; /* Each segment takes equal space */
-            background-color: #ccc; /* Default for not yet completed */
-            transition: background-color 0.3s ease-in-out;
-        }
-        .progressSegment.correct {
-            background-color: #4CAF50; /* Green */
-        }
-        .progressSegment.incorrect {
-            background-color: #f44336; /* Red */
-        }
-        /* End NEW Styling */
-
-
-        #contextDisplay {
-            min-height: 40px;
-            margin: 10px 0 20px 0;
-            padding: 15px;
-            font-style: italic;
-            font-size: 1.1em;
-            border: 2px dashed #008CBA;
-            border-radius: 8px;
-            background-color: #e6f7ff;
-            color: #222;
-            display: none;
-        }
-        #wordInput {
-            padding: 15px;
-            margin: 15px 0;
-            width: 80%; /* Base width */
-            font-size: 1.5em;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            text-align: center;
-        }
-        /* Button Styling remains the same */
-        #button-group {
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 12px 18px;
-            font-size: 1.1em;
-            margin: 5px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        #speakWordButton {
-            background-color: #ff9900;
-            color: white;
-        }
-        #speakWordButton:hover {
-            background-color: #e68a00;
-        }
-        #speakSentenceButton {
-            background-color: #008CBA;
-            color: white;
-        }
-        #speakSentenceButton:hover {
-            background-color: #007bb5;
-        }
-        #submitButton {
-            background-color: #4CAF50;
-            color: white;
-        }
-        #submitButton:hover {
-            background-color: #45a049;
-        }
-        #continueButton {
-            background-color: #f44336;
-            color: white;
-            display: none;
-            margin-top: 15px;
-        }
-        #continueButton:hover {
-            background-color: #d32f2f;
-        }
-
-        #message {
-            margin-top: 20px;
-            font-size: 1.2em;
-            font-weight: bold;
-            min-height: 25px;
-        }
-
-        /* Results Styling */
-        #results {
-            margin-top: 30px;
-            text-align: left;
-            width: 100%;
-            display: none;
-        }
-        #results h2 {
-            color: #4a7d97;
-            margin-bottom: 15px;
-        }
-        #resultsTable {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        #resultsTable th, #resultsTable td {
-            border: 1px solid #ddd;
-            padding: 10px;
-        }
-        #resultsTable th {
-            background-color: #f2f2f2;
-            text-align: center;
-        }
-        .correct {
-            background-color: #e6ffe6;
-        }
-        .incorrect {
-            background-color: #ffe6e6;
-        }
-
-        /* Start Again button in results (single control) */
-        #startAgainButton {
-            margin-top: 18px;
-            background-color: #4CAF50;
-            color: #fff;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-        }
-        #startAgainButton:hover { filter: brightness(0.95); }
-    </style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Year 6 Spelling Test</title>
+  <style>
+    :root { --accent: #4a7d97; --ok: #4CAF50; --bad: #f44336; --muted:#777; }
+    body{font-family:Arial,Helvetica,sans-serif;background:#f0f8ff;padding:20px;margin:0}
+    #container{max-width:820px;margin:0 auto;background:#fff;padding:28px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.08);position:relative}
+    h1{color:var(--accent);margin:0 0 10px; text-align: center;}
+    /* corner image */
+    .corner-woofs{position:absolute;top:12px;right:12px;width:64px;height:auto;pointer-events:none}
+    /* controls in top-left */
+    .top-controls{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:8px;z-index:11}
+    .toggle-row{display:flex;align-items:center;gap:8px;font-size:.95rem;color:#555;user-select:none}
+    .toggle-row input{width:18px;height:18px;cursor:pointer}
+    /* week selector area */
+    #weekBar{display:flex;align-items:center;gap:12px;margin:8px 0 18px;flex-wrap:wrap;justify-content:center}
+    #weekBar label{font-weight:600;color:#555}
+    #weekSelect{padding:6px 8px;border-radius:6px;border:1px solid #ccc;background:#fff}
+    #weekInfo{margin-left:8px;text-align:left}
+    #weekLabel{font-weight:700;color:var(--accent)}
+    #weekDate{font-size:.9rem;color:var(--muted)}
+    /* start screen */
+    #startScreen{display:flex;flex-direction:column;gap:14px;align-items:center;padding:18px}
+    .primary-action{padding:12px 20px;border-radius:10px;border:none;cursor:pointer;background:var(--ok);color:#fff;font-size:1.05rem}
+    /* test UI */
+    #status-area{display:flex;justify-content:space-between;align-items:center;width:80%;margin:0 auto 10px;box-sizing:border-box}
+    #progress{font-weight:700;color:var(--accent)}
+    #score{font-weight:700;color:#1a7d32}
+    #progressBarContainer{width:80%;margin:0 auto 18px;display:flex;background:#e0e0e0;border-radius:6px;overflow:hidden;height:14px}
+    .progressSegment{flex:1;background:#ccc;transition:background-color .25s}
+    .progressSegment.correct{background:#4CAF50}
+    .progressSegment.incorrect{background:#f44336}
+    #contextDisplay{min-height:40px;margin:12px 0;padding:12px;border-radius:8px;border:2px dashed #008CBA;background:#e6f7ff;font-style:italic;display:none}
+    #wordInput{padding:12px;margin:12px 0;width:80%;font-size:1.2rem;border-radius:8px;border:2px solid #ccc;text-align:center;display:block;margin-left:auto;margin-right:auto}
+    #button-group{display:flex;gap:10px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+    button{padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+    #speakWordButton{background:#ff9900;color:#fff}
+    #speakSentenceButton{background:var(--accent);color:#fff}
+    #submitButton{background:var(--ok);color:#fff}
+    /* Center the continue button when visible */
+    #continueButton{background:var(--bad);color:#fff;display:none;margin:12px auto 0; /* centered */ padding:10px 14px}
+    #message{margin-top:14px;text-align:center;font-weight:700;min-height:26px}
+    /* results */
+    #results{margin-top:22px;text-align:left;display:none}
+    #results h2{color:var(--accent)}
+    #resultsTable{width:100%;border-collapse:collapse;margin-top:8px}
+    #resultsTable th,#resultsTable td{border:1px solid #ddd;padding:8px;text-align:center}
+    .correct{background:#e6ffe6}
+    .incorrect{background:#ffe6e6}
+    #startAgainButton{margin-top:12px;background:var(--ok);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;float:right}
+    #menuButton{margin-top:12px;background:#4a7d97;color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;float:left}
+    @media (max-width:640px){ #status-area,#progressBarContainer,#wordInput{width:95%} }
+  </style>
 </head>
 <body>
+  <div id="container">
+    <img class="corner-woofs" src="Woofs.png" alt="Woofs">
 
-<div id="container">
-    <img class="corner-woofs" src="Woofs.png" alt="Woofs" />
-    <!-- Sound toggle checkbox (inside white container, top-left) -->
-    <label class="sound-toggle" for="soundToggle">
-        <input id="soundToggle" type="checkbox" />
-        <span id="soundLabel">Sound effects</span>
-    </label>
+    <!-- top-left toggles: sound and show-sentence -->
+    <div class="top-controls" aria-hidden="false">
+      <label class="toggle-row" for="soundToggle">
+        <input id="soundToggle" type="checkbox" /> <span id="soundLabel">Sound effects</span>
+      </label>
+      <label class="toggle-row" for="showSentenceToggle">
+        <input id="showSentenceToggle" type="checkbox" /> <span id="showSentenceLabel">Show sentence</span>
+      </label>
+    </div>
 
     <h1>📝 Weekly Spelling Test</h1>
 
-    <!-- START SCREEN: clearer way to start -->
-    <div id="startScreen" aria-hidden="false">
-        <p>Press Start to begin the spelling test. You can hear each word and its sentence context.</p>
-        <button id="startButton" class="primary-action" aria-label="Start Test">Start Test</button>
-        <p style="font-size:0.95rem;color:#666">Tip: press Enter once the test starts to submit answers quickly.</p>
+    <!-- week selector + info -->
+    <div id="weekBar" aria-hidden="false">
+      <label for="weekSelect">Choose week:</label>
+      <select id="weekSelect" aria-label="Choose week"></select>
+      <div id="weekInfo" aria-hidden="false">
+        <div id="weekLabel"></div>
+        <div id="weekDate"></div>
+      </div>
     </div>
 
-    <!-- TEST INTERFACE hidden until Start -->
-    <div id="test-interface" style="display:none;">
-        <div id="status-area">
-            <p id="progress">Word 1 of 20</p>
-            <p id="score">Score: 0 / 0</p>
-        </div>
-        <div id="progressBarContainer"></div>
-
-        <div id="contextDisplay"></div>
-
-        <input type="text" id="wordInput" placeholder="Type the word here..." autocomplete="off">
-
-        <div id="button-group">
-            <button id="speakWordButton">🔊 Hear Word</button>
-            <button id="speakSentenceButton">📖 Hear Sentence</button>
-            <button id="submitButton">✅ Submit Answer</button>
-        </div>
-
-        <div id="message" aria-live="polite"></div>
-        <button id="continueButton">➡️ Continue</button>
+    <!-- start screen -->
+    <div id="startScreen" role="region" aria-label="Start screen">
+      <p id="startBlurb">Press Start to begin the spelling test for the selected week.</p>
+      <button id="startButton" class="primary-action">Start Test</button>
+      <p style="font-size:.9rem;color:#666;margin:0">Tip: press Enter once the test starts to submit answers quickly.</p>
     </div>
 
-    <div id="results">
-        <h2>Detailed Results Log</h2>
-        <table id="resultsTable">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Your Spelling</th>
-                    <th>Correct Spelling</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+    <!-- test interface -->
+    <div id="test-interface" style="display:none">
+      <div id="status-area">
+        <p id="progress">Word 1 of 20</p>
+        <p id="score">Score: 0 / 0</p>
+      </div>
+      <div id="progressBarContainer" aria-hidden="true"></div>
 
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-            <button id="startAgainButton">Start Again</button>
-        </div>
+      <div id="contextDisplay" role="region" aria-live="polite"></div>
+
+      <input id="wordInput" type="text" placeholder="Type the word here…" autocomplete="off" />
+
+      <div id="button-group">
+        <button id="speakWordButton">🔊 Hear Word</button>
+        <button id="speakSentenceButton">📖 Hear Sentence</button>
+        <button id="submitButton">✅ Submit Answer</button>
+      </div>
+
+      <div id="message" aria-live="polite"></div>
+      <button id="continueButton">➡️ Continue</button>
     </div>
-</div>
 
-<script>
-    // --- 1. CONFIGURATION: UPDATE THIS LIST WEEKLY (Word + Sentence) ---
-    const spellingList = [
-        { word: "observant", sentence: "The traffic warden was very observant and spotted the illegal parking." },
-        { word: "hesitant", sentence: "She was hesitant to answer the question, taking a long pause first." },
-        { word: "tolerance", sentence: "The garden grows well because of its high tolerance to frost." },
-        { word: "decent", sentence: "I hope you have a decent amount of money saved for the trip." },
-        { word: "frequency", sentence: "The bus runs at a high frequency, arriving every fifteen minutes." },
-        { word: "observance", sentence: "The observance of rules is critical for safety." },
-        { word: "hesitancy", sentence: "His slight hesitancy gave the opposition time to think." },
-        { word: "innocent", sentence: "The court decided the boy was innocent of the crime." },
-        { word: "decency", sentence: "The children were taught common decency, like saying please and thank you." },
-        { word: "confident", sentence: "She felt confident in her ability to pass the difficult exam." },
-        { word: "expectant", sentence: "The whole crowd was expectant as the singer walked onto the stage." },
-        { word: "tolerant", sentence: "We must be tolerant of other people's views, even if we disagree." },
-        { word: "innocence", sentence: "He maintained his innocence throughout the long trial." },
-        { word: "frequent", sentence: "Frequent visits to the library improved her reading skills." },
-        { word: "confidence", sentence: "Winning the tournament boosted the team's confidence." },
-        { word: "assistant", sentence: "The shop assistant helped the customer find the correct size." },
-        { word: "assistance", sentence: "The old man requested assistance with his heavy bags." },
-        { word: "obedient", sentence: "The soldier was obedient and followed all the orders given." },
-        { word: "independent", sentence: "She became independent after moving out of her family home." },
-        { word: "independence", sentence: "The country celebrated its day of independence from foreign rule." }
+    <!-- results -->
+    <div id="results" aria-live="polite">
+      <h2>Detailed Results Log</h2>
+      <table id="resultsTable">
+        <thead>
+          <tr><th>#</th><th>Your Spelling</th><th>Correct Spelling</th><th>Status</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <button id="menuButton">Menu</button>
+      <button id="startAgainButton">Start Again</button>
+    </div>
+  </div>
+
+  <script>
+    // ======================
+    // WEEKS DATA (easy to update)
+    // ======================
+    const weeksData = [
+      {
+        id: "2025-10-23",
+        label: "Set 23 Oct — Test Fri 7 Nov 2025",
+        date: "2025-10-23",
+        words: [
+          { word: "rhyme", sentence: "The children learned a funny rhyme to help remember the spelling." },
+          { word: "secretary", sentence: "The secretary typed up the meeting minutes quickly." },
+          { word: "sincere", sentence: "He made a sincere apology after accidentally breaking the vase." },
+          { word: "sufficient", sentence: "We have sufficient pencils for everyone in the class." },
+          { word: "system", sentence: "The school's heating system was repaired over the holidays." },
+          { word: "rhythm", sentence: "She clapped the rhythm of the song perfectly in music class." },
+          { word: "shoulder", sentence: "He carried the bag on his shoulder as he walked home." },
+          { word: "soldier", sentence: "The soldier marched bravely in the parade." },
+          { word: "suggest", sentence: "May I suggest a different book for the class reading?" },
+          { word: "temperature", sentence: "The nurse took my temperature before I returned to class." },
+          { word: "sacrifice", sentence: "They made a small sacrifice of their break time to finish the experiment." },
+          { word: "signature", sentence: "Please write your signature at the bottom of the form." },
+          { word: "stomach", sentence: "Her stomach rumbled loudly during the quiet assembly." },
+          { word: "symbol", sentence: "The dove is often used as a symbol of peace." },
+          { word: "thorough", sentence: "Make a thorough check of your answers before handing them in." },
+          { word: "twelfth", sentence: "This is the twelfth question on the worksheet." },
+          { word: "variety", sentence: "The market sold a variety of fresh fruits and snacks." },
+          { word: "vegetable", sentence: "He chose one vegetable from the tray for his soup." },
+          { word: "vehicle", sentence: "A large vehicle delivered the new desks to the school." },
+          { word: "sincerely", sentence: "She finished the letter with 'Yours sincerely' and signed her name." }
+        ]
+      },
+      {
+        id: "2025-11-07",
+        label: "Set 7 Nov — Test Fri 14 Nov 2025",
+        date: "2025-11-07",
+        words: [
+          { word: "observant", sentence: "The traffic warden was very observant and spotted the illegal parking." },
+          { word: "hesitant", sentence: "She was hesitant to answer the question, taking a long pause first." },
+          { word: "tolerance", sentence: "The garden grows well because of its high tolerance to frost." },
+          { word: "decent", sentence: "I hope you have a decent amount of money saved for the trip." },
+          { word: "frequency", sentence: "The bus runs at a high frequency, arriving every fifteen minutes." },
+          { word: "observance", sentence: "The observance of rules is critical for safety." },
+          { word: "hesitancy", sentence: "His slight hesitancy gave the opposition time to think." },
+          { word: "innocent", sentence: "The court decided the boy was innocent of the crime." },
+          { word: "decency", sentence: "The children were taught common decency, like saying please and thank you." },
+          { word: "confident", sentence: "She felt confident in her ability to pass the difficult exam." },
+          { word: "expectant", sentence: "The whole crowd was expectant as the singer walked onto the stage." },
+          { word: "tolerant", sentence: "We must be tolerant of other people's views, even if we disagree." },
+          { word: "innocence", sentence: "He maintained his innocence throughout the long trial." },
+          { word: "frequent", sentence: "Frequent visits to the library improved her reading skills." },
+          { word: "confidence", sentence: "Winning the tournament boosted the team's confidence." },
+          { word: "assistant", sentence: "The shop assistant helped the customer find the correct size." },
+          { word: "assistance", sentence: "The old man requested assistance with his heavy bags." },
+          { word: "obedient", sentence: "The soldier was obedient and followed all the orders given." },
+          { word: "independent", sentence: "She became independent after moving out of her family home." },
+          { word: "independence", sentence: "The country celebrated its day of independence from foreign rule." }
+        ]
+      }
     ];
-    // --- END CONFIGURATION ---
 
-    // State
+    // ----------------------
+    // DOM refs & state
+    // ----------------------
+    let spellingList = [];
+    let currentWeek = null;
     let currentWordIndex = 0;
     let score = 0;
     let resultsLog = [];
 
-    // DOM refs
+    const weekSelectEl = document.getElementById('weekSelect');
+    const weekLabelEl = document.getElementById('weekLabel');
+    const weekDateEl = document.getElementById('weekDate');
+    const weekBarEl = document.getElementById('weekBar');
+
     const startScreenEl = document.getElementById('startScreen');
     const startButtonEl = document.getElementById('startButton');
+
     const testInterfaceEl = document.getElementById('test-interface');
     const progressEl = document.getElementById('progress');
     const scoreEl = document.getElementById('score');
@@ -347,427 +213,357 @@
     const speakSentenceButtonEl = document.getElementById('speakSentenceButton');
     const submitButtonEl = document.getElementById('submitButton');
     const continueButtonEl = document.getElementById('continueButton');
+
     const resultsEl = document.getElementById('results');
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
-    const contextDisplayEl = document.getElementById('contextDisplay');
-    const statusAreaEl = document.getElementById('status-area');
     const startAgainButtonEl = document.getElementById('startAgainButton');
+    const menuButtonEl = document.getElementById('menuButton');
 
-    // Sound toggle control
+    // toggles
     const soundToggleEl = document.getElementById('soundToggle');
+    const showSentenceToggleEl = document.getElementById('showSentenceToggle');
     const SOUND_KEY = 'spellingSoundEnabled';
-    let soundEnabled = localStorage.getItem(SOUND_KEY) === null
-        ? true
-        : localStorage.getItem(SOUND_KEY) === 'true';
+    const SHOW_SENTENCE_KEY = 'spellingShowSentence';
+    let soundEnabled = localStorage.getItem(SOUND_KEY) === null ? true : localStorage.getItem(SOUND_KEY) === 'true';
+    let showSentenceEnabled = localStorage.getItem(SHOW_SENTENCE_KEY) === null ? true : localStorage.getItem(SHOW_SENTENCE_KEY) === 'true';
     soundToggleEl.checked = soundEnabled;
+    showSentenceToggleEl.checked = showSentenceEnabled;
     const soundLabelEl = document.getElementById('soundLabel');
+    const showSentenceLabelEl = document.getElementById('showSentenceLabel');
     soundLabelEl.textContent = soundEnabled ? 'Sound effects' : 'Sound effects (off)';
+    showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence' : 'Show sentence (off)';
 
-    // --- AUDIO: WebAudio-based correct/incorrect sounds (no external files) ---
-    let audioCtx = null;
-    function ensureAudioContext() {
-        if (!soundEnabled) return null;
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(() => {});
-        }
-        return audioCtx;
-    }
-
-    function playCorrectSound() {
-        if (!soundEnabled) return;
-        const ctx = ensureAudioContext();
-        if (!ctx) return;
-        if (ctx.state === 'suspended') {
-            ctx.resume().catch(() => {});
-        }
-        const now = ctx.currentTime;
-
-        const o = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        o.type = 'sine';
-        o.frequency.setValueAtTime(880, now);
-        o.frequency.exponentialRampToValueAtTime(1320, now + 0.14);
-
-        gain.gain.setValueAtTime(0.0, now);
-        gain.gain.linearRampToValueAtTime(0.25, now + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-
-        o.connect(gain);
-        gain.connect(ctx.destination);
-
-        o.start(now);
-        o.stop(now + 0.6);
-    }
-
-    function playWrongSound() {
-        if (!soundEnabled) return;
-        const ctx = ensureAudioContext();
-        if (!ctx) return;
-        if (ctx.state === 'suspended') {
-            ctx.resume().catch(() => {});
-        }
-        const now = ctx.currentTime;
-
-        const o1 = ctx.createOscillator();
-        const o2 = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        o1.type = 'sawtooth';
-        o1.frequency.setValueAtTime(220, now);
-
-        o2.type = 'sine';
-        o2.frequency.setValueAtTime(270, now);
-
-        gain.gain.setValueAtTime(0.0, now);
-        gain.gain.linearRampToValueAtTime(0.22, now + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-
-        o1.connect(gain);
-        o2.connect(gain);
-        gain.connect(ctx.destination);
-
-        o1.start(now);
-        o2.start(now + 0.02);
-        o1.stop(now + 0.45);
-        o2.stop(now + 0.45);
-    }
-
-    // When user toggles sound: save preference and suspend/resume audio context
     soundToggleEl.addEventListener('change', () => {
-        soundEnabled = soundToggleEl.checked;
-        localStorage.setItem(SOUND_KEY, String(soundEnabled));
-        soundLabelEl.textContent = soundEnabled ? 'Sound effects' : 'Sound effects (off)';
-
-        if (!soundEnabled && audioCtx && audioCtx.state !== 'closed') {
-            audioCtx.suspend().catch(() => {});
-        } else if (soundEnabled && audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(() => {});
-        }
+      soundEnabled = soundToggleEl.checked;
+      localStorage.setItem(SOUND_KEY, String(soundEnabled));
+      soundLabelEl.textContent = soundEnabled ? 'Sound effects' : 'Sound effects (off)';
+      if (!soundEnabled && audioCtx && audioCtx.state !== 'closed') audioCtx.suspend().catch(()=>{});
+      else if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
     });
 
-    // --- SPEECH SYNTHESIS SETUP ---
-    function getUKVoice() {
-        const voices = speechSynthesis.getVoices();
-        return voices.find(voice => voice.name.includes('Google') && voice.lang.includes('en-GB')) ||
-               voices.find(voice => voice.lang.includes('en-GB')) ||
-               null;
+    showSentenceToggleEl.addEventListener('change', () => {
+      showSentenceEnabled = showSentenceToggleEl.checked;
+      localStorage.setItem(SHOW_SENTENCE_KEY, String(showSentenceEnabled));
+      showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence' : 'Show sentence (off)';
+      // update display for current word immediately
+      if (testInterfaceEl.style.display !== 'none') {
+        if (showSentenceEnabled) displayBlankedSentence(currentWordIndex);
+        else { document.getElementById('contextDisplay').style.display = 'none'; }
+      }
+    });
+
+    // ======================
+    // Voice / audio
+    // ======================
+    let selectedUKVoice = null;
+    function loadVoices() {
+      const voices = speechSynthesis.getVoices() || [];
+      if (!voices.length) return;
+      selectedUKVoice =
+        voices.find(v => v.lang && v.lang.toLowerCase().includes('en-gb') && /female/i.test(v.name)) ||
+        voices.find(v => v.lang && v.lang.toLowerCase().includes('en-gb')) ||
+        null;
     }
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+
     function createUtterance(text) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        const ukVoice = getUKVoice();
-        if (ukVoice) {
-            utterance.voice = ukVoice;
-            utterance.rate = 0.9;
-        } else {
-            utterance.lang = 'en-GB';
-        }
-        return utterance;
+      const u = new SpeechSynthesisUtterance(text);
+      if (selectedUKVoice) { u.voice = selectedUKVoice; u.rate = 0.9; }
+      else u.lang = 'en-GB';
+      return u;
+    }
+
+    // WebAudio for feedback
+    let audioCtx = null;
+    function ensureAudioContext() {
+      if (!soundEnabled) return null;
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+      return audioCtx;
+    }
+    function playCorrectSound() {
+      if (!soundEnabled) return;
+      const ctx = ensureAudioContext(); if (!ctx) return;
+      const now = ctx.currentTime; const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(880, now); o.frequency.exponentialRampToValueAtTime(1320, now+0.14);
+      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.25, now+0.01); g.gain.exponentialRampToValueAtTime(0.001, now+0.5);
+      o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now+0.6);
+    }
+    function playWrongSound() {
+      if (!soundEnabled) return;
+      const ctx = ensureAudioContext(); if (!ctx) return;
+      const now = ctx.currentTime; const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+      o1.type='sawtooth'; o1.frequency.setValueAtTime(220, now);
+      o2.type='sine'; o2.frequency.setValueAtTime(270, now);
+      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.22, now+0.01); g.gain.exponentialRampToValueAtTime(0.001, now+0.5);
+      o1.connect(g); o2.connect(g); g.connect(ctx.destination); o1.start(now); o2.start(now+0.02); o1.stop(now+0.45); o2.stop(now+0.45);
+    }
+
+    // ======================
+    // Week selector logic
+    // ======================
+    function populateWeekSelect() {
+      weekSelectEl.innerHTML = '';
+      const sorted = weeksData.slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+      for (const w of sorted) {
+        const opt = document.createElement('option');
+        opt.value = w.id;
+        opt.textContent = `${w.label} — ${w.date}`;
+        weekSelectEl.appendChild(opt);
+      }
+      const defaultIndex = findMostRelevantWeekIndex(sorted);
+      weekSelectEl.selectedIndex = defaultIndex;
+      loadWeek(sorted[defaultIndex]);
+    }
+
+    function findMostRelevantWeekIndex(sortedWeeks) {
+      const today = new Date(); const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      let candidate = -1;
+      for (let i = 0; i < sortedWeeks.length; i++) {
+        const d = new Date(sortedWeeks[i].date);
+        if (isNaN(d)) continue;
+        if (d <= todayOnly) candidate = i;
+      }
+      if (candidate !== -1) return candidate;
+      return sortedWeeks.length ? sortedWeeks.length - 1 : 0;
+    }
+
+    function loadWeekById(id) {
+      const week = weeksData.find(w => w.id === id);
+      if (week) loadWeek(week);
+    }
+
+    function loadWeek(week) {
+      currentWeek = week;
+      spellingList = week.words.slice();
+      weekLabelEl.textContent = week.label || '';
+      weekDateEl.textContent = week.date || '';
+      document.title = `Year 6 Spelling Test — ${week.label || week.date || ''}`;
+      resetToStartScreen();
+      buildProgressBar();
+    }
+    weekSelectEl.addEventListener('change', (e)=> loadWeekById(e.target.value));
+
+    // ======================
+    // Core test logic
+    // ======================
+    function buildProgressBar() {
+      progressBarContainerEl.innerHTML = '';
+      for (let i=0;i<spellingList.length;i++){
+        const seg = document.createElement('div');
+        seg.className = 'progressSegment';
+        progressBarContainerEl.appendChild(seg);
+      }
+    }
+    function updateScoreAndProgress() {
+      const wordsCompleted = resultsLog.length;
+      scoreEl.textContent = `Score: ${score} / ${wordsCompleted}`;
+      if (currentWordIndex < spellingList.length) progressEl.textContent = `Word ${currentWordIndex + 1} of ${spellingList.length}`;
+      const segments = progressBarContainerEl.children;
+      for (let i=0;i<segments.length;i++){
+        segments[i].className = 'progressSegment';
+        if (i < resultsLog.length) segments[i].classList.add(resultsLog[i].isCorrect ? 'correct' : 'incorrect');
+      }
+    }
+    function toggleButtons(enable){
+      submitButtonEl.disabled = !enable;
+      speakWordButtonEl.disabled = !enable;
+      speakSentenceButtonEl.disabled = !enable;
+      inputEl.disabled = !enable;
+    }
+    function updateProgressScreen() {
+      inputEl.value = '';
+      messageEl.textContent = '';
+      const ctx = document.getElementById('contextDisplay');
+      ctx.textContent = '';
+      ctx.style.display = 'none';
+      continueButtonEl.style.display = 'none';
+      toggleButtons(true);
+      inputEl.focus();
+      updateScoreAndProgress();
+      // If "Show sentence" is enabled, display blanked sentence for the current word (but do not speak it)
+      if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
+    }
+
+    function displayBlankedSentence(index) {
+      const ctx = document.getElementById('contextDisplay');
+      if (!spellingList || index == null || index >= spellingList.length) { ctx.style.display = 'none'; return; }
+      const item = spellingList[index];
+      const regex = new RegExp(escapeRegExp(item.word), 'gi');
+      const blanked = item.sentence.replace(regex, '______');
+      ctx.innerHTML = blanked;
+      ctx.style.display = 'block';
     }
 
     function speakWord() {
-        if (currentWordIndex >= spellingList.length) return;
-
-        const word = spellingList[currentWordIndex].word;
-        const utterance = createUtterance(word);
-
-        messageEl.textContent = "🔊 Speaking the word...";
-        contextDisplayEl.style.display = 'none';
-        speechSynthesis.speak(utterance);
-        inputEl.focus();
-    }
-
-    function escapeRegExp(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (!spellingList || currentWordIndex >= spellingList.length) return;
+      const word = spellingList[currentWordIndex].word;
+      const utt = createUtterance(word);
+      messageEl.textContent = "🔊 Speaking the word...";
+      document.getElementById('contextDisplay').style.display = 'none';
+      speechSynthesis.speak(utt);
+      inputEl.focus();
+      // If show-sentence is enabled, display the blanked sentence (but don't read it)
+      if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
     }
 
     function speakSentence() {
-        if (currentWordIndex >= spellingList.length) return;
-
-        const item = spellingList[currentWordIndex];
-        const sentence = item.sentence;
-        const word = item.word;
-
-        const regex = new RegExp(escapeRegExp(word), 'gi');
-        const blankedSentence = sentence.replace(regex, '______');
-
-        const utterance = createUtterance(sentence);
-
-        contextDisplayEl.innerHTML = blankedSentence;
-        contextDisplayEl.style.display = 'block';
-        messageEl.textContent = "📖 Speaking the sentence context...";
-
-        speechSynthesis.speak(utterance);
-        inputEl.focus();
+      if (!spellingList || currentWordIndex >= spellingList.length) return;
+      const item = spellingList[currentWordIndex];
+      const regex = new RegExp(escapeRegExp(item.word), 'gi');
+      const blanked = item.sentence.replace(regex, '______');
+      const ctx = document.getElementById('contextDisplay');
+      ctx.innerHTML = blanked;
+      ctx.style.display = 'block';
+      messageEl.textContent = "📖 Speaking the sentence context...";
+      speechSynthesis.speak(createUtterance(item.sentence));
+      inputEl.focus();
     }
 
-    // Toggle UI controls
-    function toggleButtons(enable) {
-        submitButtonEl.disabled = !enable;
-        speakWordButtonEl.disabled = !enable;
-        speakSentenceButtonEl.disabled = !enable;
-        inputEl.disabled = !enable;
-    }
-
-    // Adjusts the progress bar and status area width to match input and centers them
-    function adjustProgressBarWidth() {
-        const inputWidth = inputEl.offsetWidth;
-        progressBarContainerEl.style.width = `${inputWidth}px`;
-        progressBarContainerEl.style.margin = '0 auto 25px';
-        statusAreaEl.style.width = `${inputWidth}px`;
-        statusAreaEl.style.margin = '0 auto 10px';
-    }
-
-    // Update score & segmented progress bar
-    function updateScoreAndProgress() {
-        const wordsCompleted = resultsLog.length;
-        const totalWords = spellingList.length;
-
-        scoreEl.textContent = `Score: ${score} / ${wordsCompleted}`;
-
-        if (currentWordIndex < totalWords) {
-            progressEl.textContent = `Word ${currentWordIndex + 1} of ${totalWords}`;
-        }
-
-        // Clear existing segments
-        progressBarContainerEl.innerHTML = '';
-
-        // Create a segment for each word
-        for (let i = 0; i < totalWords; i++) {
-            const segment = document.createElement('div');
-            segment.classList.add('progressSegment');
-            if (i < wordsCompleted) {
-                const result = resultsLog[i];
-                if (result.isCorrect) {
-                    segment.classList.add('correct');
-                } else {
-                    segment.classList.add('incorrect');
-                }
-            }
-            progressBarContainerEl.appendChild(segment);
-        }
-    }
-
-    function updateProgress() {
-        inputEl.value = '';
-        messageEl.textContent = '';
-        contextDisplayEl.textContent = '';
-        contextDisplayEl.style.display = 'none';
-        continueButtonEl.style.display = 'none';
-        toggleButtons(true);
-        inputEl.focus();
-
-        updateScoreAndProgress();
-        adjustProgressBarWidth();
-    }
+    function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 
     function checkSpelling() {
-        if (currentWordIndex >= spellingList.length) return;
-
-        const typedWord = inputEl.value.trim();
-        const correctWord = spellingList[currentWordIndex].word;
-        const isCorrect = typedWord.toLowerCase() === correctWord.toLowerCase();
-
-        if (typedWord === "") {
-            messageEl.textContent = "⚠️ Please type a word first!";
-            return;
-        }
-
-        // Log the result
-        resultsLog.push({
-            index: currentWordIndex + 1,
-            correctWord: correctWord,
-            submittedWord: typedWord,
-            isCorrect: isCorrect
-        });
-
-        toggleButtons(false);
-
-        if (isCorrect) {
-            playCorrectSound();
-
-            score++;
-            messageEl.textContent = "✅ Correct! Moving to the next word...";
-            currentWordIndex++;
-            updateScoreAndProgress();
-            setTimeout(nextStep, 1000);
-        } else {
-            playWrongSound();
-
-            messageEl.textContent = `❌ Incorrect. The correct spelling was: "${correctWord}".`;
-            currentWordIndex++;
-            updateScoreAndProgress();
-            continueButtonEl.style.display = 'inline-block';
-            continueButtonEl.focus();
-        }
+      if (!spellingList || currentWordIndex >= spellingList.length) return;
+      const typed = inputEl.value.trim();
+      const correct = spellingList[currentWordIndex].word;
+      if (!typed) { messageEl.textContent = "⚠️ Please type a word first!"; return; }
+      const isCorrect = typed.toLowerCase() === correct.toLowerCase();
+      resultsLog.push({ index: currentWordIndex+1, submittedWord: typed, correctWord: correct, isCorrect });
+      toggleButtons(false);
+      if (isCorrect) {
+        playCorrectSound();
+        score++;
+        messageEl.textContent = "✅ Correct!";
+        currentWordIndex++;
+        updateScoreAndProgress();
+        setTimeout(nextStep, 700);
+      } else {
+        playWrongSound();
+        messageEl.textContent = `❌ Incorrect — correct: "${correct}".`;
+        currentWordIndex++;
+        updateScoreAndProgress();
+        // Show centered Continue button when incorrect
+        continueButtonEl.style.display = 'block';
+        continueButtonEl.focus();
+      }
     }
 
-    function displayResults() {
-        testInterfaceEl.style.display = 'none';
-        resultsEl.style.display = 'block';
-
-        resultsTableBodyEl.innerHTML = '';
-        resultsLog.forEach(log => {
-            const row = resultsTableBodyEl.insertRow();
-            row.className = log.isCorrect ? 'correct' : 'incorrect';
-
-            const cell1 = row.insertCell(); cell1.textContent = log.index;
-            const cell2 = row.insertCell(); cell2.textContent = log.submittedWord;
-            const cell3 = row.insertCell(); cell3.textContent = log.correctWord;
-            const cell4 = row.insertCell(); cell4.textContent = log.isCorrect ? 'Correct' : 'Incorrect';
-        });
+    function nextStep(){
+      if (currentWordIndex < spellingList.length) {
+        updateProgressScreen();
+        speakWord();
+      } else {
+        finishTest();
+      }
     }
 
-    function nextStep() {
-        if (currentWordIndex < spellingList.length) {
-            updateProgress();
-            speakWord();
-        } else {
-            // Test Finished!
-            progressEl.textContent = "TEST FINISHED!";
-            scoreEl.textContent = `Final Score: ${score} / ${spellingList.length}`;
-            messageEl.textContent = `🎉 You scored ${score} out of ${spellingList.length}! Great effort!`;
-
-            updateScoreAndProgress();
-
-            displayResults();
-
-            // show the single "Start Again" control in results
-            startAgainButtonEl.style.display = 'inline-block';
-
-            // Keep the "Hear Word" button behavior unchanged (no label override)
-            // Hide sentence/submit controls while on results
-            speakSentenceButtonEl.style.display = 'none';
-            submitButtonEl.style.display = 'none';
-            continueButtonEl.style.display = 'none';
-        }
+    function displayResults(){
+      testInterfaceEl.style.display = 'none';
+      resultsEl.style.display = 'block';
+      resultsTableBodyEl.innerHTML = '';
+      for (const log of resultsLog) {
+        const row = resultsTableBodyEl.insertRow();
+        row.className = log.isCorrect ? 'correct' : 'incorrect';
+        row.insertCell().textContent = log.index;
+        row.insertCell().textContent = log.submittedWord;
+        row.insertCell().textContent = log.correctWord;
+        row.insertCell().textContent = log.isCorrect ? 'Correct' : 'Incorrect';
+      }
     }
 
-    // Start test: hide start screen, reset state and begin
+    function finishTest() {
+      progressEl.textContent = "TEST FINISHED!";
+      scoreEl.textContent = `Final Score: ${score} / ${spellingList.length}`;
+      messageEl.textContent = `🎉 You scored ${score} out of ${spellingList.length}!`;
+      updateScoreAndProgress();
+      displayResults();
+      // hide sentence/submit while on results
+      speakSentenceButtonEl.style.display = 'none';
+      submitButtonEl.style.display = 'none';
+      continueButtonEl.style.display = 'none';
+      // Hide week selector on results (user requested Menu/Home instead of selector on results)
+      weekBarEl.style.display = 'none';
+      // show Start Again and Menu
+      startAgainButtonEl.style.display = 'inline-block';
+      menuButtonEl.style.display = 'inline-block';
+    }
+
+    // start/reset helpers
     function startTest() {
-        // create/resume audio context on user gesture if sound is enabled
-        if (soundEnabled) ensureAudioContext();
-
-        // Ensure UI buttons are restored to default state for a fresh run
-        speakWordButtonEl.textContent = '🔊 Hear Word';
-        speakWordButtonEl.style.backgroundColor = '#ff9900';
-        speakWordButtonEl.onclick = null;
-
-        speakSentenceButtonEl.style.display = 'inline-block';
-        submitButtonEl.style.display = 'inline-block';
-        continueButtonEl.style.display = 'none';
-
-        startScreenEl.style.display = 'none';
-        resultsEl.style.display = 'none';
-        testInterfaceEl.style.display = 'block';
-
-        // reset state
-        currentWordIndex = 0;
-        score = 0;
-        resultsLog = [];
-
-        updateProgress();
-        speakWord();
+      if (soundEnabled) ensureAudioContext();
+      // hide week selector once the test starts
+      weekBarEl.style.display = 'none';
+      // restore UI
+      speakSentenceButtonEl.style.display = 'inline-block';
+      submitButtonEl.style.display = 'inline-block';
+      continueButtonEl.style.display = 'none';
+      startScreenEl.style.display = 'none';
+      resultsEl.style.display = 'none';
+      testInterfaceEl.style.display = 'block';
+      // reset state
+      currentWordIndex = 0;
+      score = 0;
+      resultsLog = [];
+      buildProgressBar();
+      updateProgressScreen();
+      // speak first word automatically
+      setTimeout(speakWord, 300);
     }
 
-    // Reset state and show start screen (user chooses to restart)
     function resetToStartScreen() {
-        // suspend audioCtx if present and sound disabled
-        if (!soundEnabled && audioCtx && audioCtx.state !== 'closed') {
-            audioCtx.suspend().catch(()=>{});
-        }
-
-        // reset state
-        currentWordIndex = 0;
-        score = 0;
-        resultsLog = [];
-        resultsTableBodyEl.innerHTML = '';
-
-        // restore speakWord button in case it was changed
-        speakWordButtonEl.textContent = '🔊 Hear Word';
-        speakWordButtonEl.style.backgroundColor = '#ff9900';
-        speakWordButtonEl.onclick = null;
-
-        speakSentenceButtonEl.style.display = 'inline-block';
-        submitButtonEl.style.display = 'inline-block';
-        continueButtonEl.style.display = 'none';
-
-        // restore UI
-        testInterfaceEl.style.display = 'none';
-        resultsEl.style.display = 'none';
-        startScreenEl.style.display = 'flex';
-        startButtonEl.focus();
+      currentWordIndex = 0;
+      score = 0;
+      resultsLog = [];
+      inputEl.value = '';
+      messageEl.textContent = '';
+      testInterfaceEl.style.display = 'none';
+      resultsEl.style.display = 'none';
+      startScreenEl.style.display = 'flex';
+      // show week selector on start screen
+      weekBarEl.style.display = 'flex';
+      // hide menu button while on start screen
+      menuButtonEl.style.display = 'none';
+      // hide startAgain until needed
+      startAgainButtonEl.style.display = 'none';
     }
 
-    // Reset then immediately start (used by Start Again on results)
-    function resetAndStartImmediate() {
-        resetToStartScreen();
-        // small delay to ensure layout/framing complete
-        setTimeout(startTest, 80);
-    }
+    function resetAndStartImmediate() { resetToStartScreen(); setTimeout(startTest, 80); }
 
-    // --- EVENT LISTENERS ---
-    startButtonEl.addEventListener('click', startTest);
-
-    speakWordButtonEl.addEventListener('click', function() {
-        if (soundEnabled) ensureAudioContext();
-        // If test not started, treat as start (defensive)
-        if (testInterfaceEl.style.display === 'none') {
-            startTest();
-            return;
-        }
-        speakWord();
+    // ======================
+    // Event wiring
+    // ======================
+    startButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); startTest(); });
+    speakWordButtonEl.addEventListener('click', ()=> {
+      if (soundEnabled) ensureAudioContext();
+      if (testInterfaceEl.style.display === 'none') { startTest(); return; }
+      speakWord();
     });
-    speakSentenceButtonEl.addEventListener('click', function() {
-        if (soundEnabled) ensureAudioContext();
-        speakSentence();
-    });
-    submitButtonEl.addEventListener('click', function() {
-        if (soundEnabled) ensureAudioContext();
-        checkSpelling();
-    });
-
-    continueButtonEl.addEventListener('click', function() {
-        if (soundEnabled) ensureAudioContext();
-        nextStep();
-        inputEl.focus();
-    });
-
-    // Start Again control on results
+    speakSentenceButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); speakSentence(); });
+    submitButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); checkSpelling(); });
+    continueButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); nextStep(); inputEl.focus(); });
     startAgainButtonEl.addEventListener('click', resetAndStartImmediate);
+    menuButtonEl.addEventListener('click', resetToStartScreen);
 
-    // Enter behaviour: when on start screen Enter starts test; when in test Enter submits
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            // if start screen visible -> start
-            if (startScreenEl.style.display !== 'none') {
-                e.preventDefault();
-                startTest();
-            } else if (continueButtonEl.style.display === 'inline-block') {
-                e.preventDefault();
-                continueButtonEl.click();
-            } else if (!submitButtonEl.disabled) {
-                // submit answer
-                e.preventDefault();
-                checkSpelling();
-            }
-        }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (startScreenEl.style.display !== 'none') { e.preventDefault(); startTest(); }
+        else if (continueButtonEl.style.display === 'inline-block') { e.preventDefault(); continueButtonEl.click(); }
+        else if (!submitButtonEl.disabled) { e.preventDefault(); checkSpelling(); }
+      }
     });
 
-    // Sound toggle already wired earlier
-    soundToggleEl.addEventListener('change', () => { /* persisted earlier */ });
-
-    // Adjust width on window resize
-    window.addEventListener('resize', adjustProgressBarWidth);
-
-    // Initial visual state (show start screen)
-    resetToStartScreen();
-</script>
-
+    // ======================
+    // Initialization
+    // ======================
+    populateWeekSelect();
+    // initial toggle/button visibility
+    startAgainButtonEl.style.display = 'none';
+    menuButtonEl.style.display = 'none';
+    // Default: show sentence toggle on by default (persisted above)
+    if (showSentenceToggleEl.checked) {
+      showSentenceToggleEl.dispatchEvent(new Event('change'));
+    }
+  </script>
 </body>
 </html>
-
-
