@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spelling Test</title> 
+    <title>Year 6 Custom Spelling Test</title>
     <style>
-        /* --- BASE STYLES (Desktop/Tablet) --- */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -24,45 +23,50 @@
             max-width: 650px; 
             text-align: center;
         }
+        h1 {
+            color: #4a7d97;
+            margin-bottom: 25px;
+        }
         
-        /* Status and Progress Area */
+        /* NEW: Score and Progress Styling */
         #status-area {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%; 
+            width: 100%; /* Will be adjusted by JS */
             margin-bottom: 10px;
         }
         #score {
             font-weight: bold;
-            color: #1a7d32;
+            color: #1a7d32; /* Dark Green */
         }
         #progress {
             font-weight: bold;
             color: #4a7d97;
         }
         #progressBarContainer {
-            width: 100%; 
-            display: flex; 
+            width: 100%; /* Will be adjusted by JS to match input width */
+            display: flex; /* Use flexbox for segments */
             background-color: #e0e0e0;
             border-radius: 5px;
             height: 15px;
             margin-bottom: 25px;
-            overflow: hidden; 
+            overflow: hidden; /* Ensures segments don't overflow rounded corners */
         }
         .progressSegment {
-            flex-grow: 1;
-            background-color: #ccc;
+            flex-grow: 1; /* Each segment takes equal space */
+            background-color: #ccc; /* Default for not yet completed */
             transition: background-color 0.3s ease-in-out;
         }
         .progressSegment.correct {
-            background-color: #4CAF50;
+            background-color: #4CAF50; /* Green */
         }
         .progressSegment.incorrect {
-            background-color: #f44336;
+            background-color: #f44336; /* Red */
         }
+        /* End NEW Styling */
 
-        /* Context and Input */
+
         #contextDisplay {
             min-height: 40px;
             margin: 10px 0 20px 0;
@@ -78,14 +82,13 @@
         #wordInput {
             padding: 15px;
             margin: 15px 0;
-            width: 80%; 
+            width: 80%; /* Base width */
             font-size: 1.5em;
             border: 2px solid #ccc;
             border-radius: 8px;
             text-align: center;
         }
-        
-        /* Button Group - Desktop */
+        /* Button Styling remains the same */
         #button-group {
             margin-bottom: 20px;
         }
@@ -98,19 +101,36 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        #speakWordButton { background-color: #ff9900; color: white; }
-        #speakWordButton:hover { background-color: #e68a00; }
-        #speakSentenceButton { background-color: #008CBA; color: white; }
-        #speakSentenceButton:hover { background-color: #007bb5; }
-        
-        /* Continue Button */
-        #continueButton { 
+        #speakWordButton {
+            background-color: #ff9900;
+            color: white;
+        }
+        #speakWordButton:hover {
+            background-color: #e68a00;
+        }
+        #speakSentenceButton {
+            background-color: #008CBA; 
+            color: white;
+        }
+        #speakSentenceButton:hover {
+            background-color: #007bb5;
+        }
+        #submitButton {
+            background-color: #4CAF50; 
+            color: white;
+        }
+        #submitButton:hover {
+            background-color: #45a049;
+        }
+        #continueButton {
             background-color: #f44336; 
-            color: white; 
+            color: white;
             display: none; 
             margin-top: 15px; 
         }
-        #continueButton:hover { background-color: #d32f2f; }
+        #continueButton:hover {
+            background-color: #d32f2f;
+        }
 
         #message {
             margin-top: 20px;
@@ -119,81 +139,42 @@
             min-height: 25px;
         }
 
-        /* --- MOBILE OPTIMIZATION (Max screen width 600px) --- */
-        @media (max-width: 600px) {
-            #container {
-                padding: 15px 10px; 
-            }
-            
-            /* Crucial input element */
-            #wordInput {
-                padding: 10px; 
-                margin: 5px 0 10px 0; 
-                width: 90%; 
-                font-size: 1.3em;
-                order: 1; 
-            }
-            
-            /* Desktop button group is hidden */
-            #button-group {
-                display: none; 
-            }
-            
-            /* Mobile button container for crucial actions and input */
-            #button-container-mobile {
-                display: flex;
-                flex-direction: column;
-                width: 90%;
-                margin: 0 auto;
-            }
-            #button-container-mobile button {
-                width: 100%; 
-                margin: 4px 0; 
-                font-size: 1em;
-            }
-            
-            /* Submit button is removed, Continue is the only action visible after failure */
-            #submitButton { display: none !important; }
-
-            /* Continue button must appear above message on mobile to avoid keyboard cover */
-            #continueButton {
-                order: 3;
-                margin-top: 10px; 
-                display: none; 
-            }
-            
-            #message {
-                order: 2; 
-                margin-top: 10px; 
-                margin-bottom: 0;
-            }
-
-            /* Secondary buttons (Hear Word/Context) (order 4 on mobile) */
-            #secondary-buttons-mobile {
-                display: flex;
-                justify-content: space-between;
-                width: 100%;
-                order: 4; 
-                margin-top: 15px;
-            }
-            #speakWordButton, #speakSentenceButton {
-                width: 49%;
-                margin: 0 0.5%;
-            }
+        /* Results Styling */
+        #results {
+            margin-top: 30px;
+            text-align: left;
+            width: 100%;
+            display: none; 
         }
-        /* Results Styling remains the same */
-        #results { margin-top: 30px; text-align: left; width: 100%; display: none; }
-        #results h2 { color: #4a7d97; margin-bottom: 15px; }
-        #resultsTable { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        #resultsTable th, #resultsTable td { border: 1px solid #ddd; padding: 10px; }
-        #resultsTable th { background-color: #f2f2f2; text-align: center; }
-        .correct { background-color: #e6ffe6; }
-        .incorrect { background-color: #ffe6e6; }
+        #results h2 {
+            color: #4a7d97;
+            margin-bottom: 15px;
+        }
+        #resultsTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        #resultsTable th, #resultsTable td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        #resultsTable th {
+            background-color: #f2f2f2;
+            text-align: center;
+        }
+        .correct {
+            background-color: #e6ffe6; 
+        }
+        .incorrect {
+            background-color: #ffe6e6; 
+        }
     </style>
 </head>
 <body>
 
 <div id="container">
+    <h1>📝 Weekly Spelling Test</h1>
     
     <div id="test-interface">
         
@@ -201,29 +182,21 @@
             <p id="progress">Word 1 of 20</p>
             <p id="score">Score: 0 / 0</p>
         </div>
-        <div id="progressBarContainer"></div>
+        <div id="progressBarContainer">
+            </div>
         
         <div id="contextDisplay"></div>
         
-        <div id="button-container-mobile">
-            <input type="text" id="wordInput" placeholder="Type the word here..." autofocus>
-            
-            <div id="message"></div>
-            
-            <button id="continueButton">➡️ Continue</button> 
-
-            <div id="secondary-buttons-mobile">
-                <button id="speakWordButton">🔊 Hear Word</button>
-                <button id="speakSentenceButton">📖 Context</button>
-            </div>
-        </div>
+        <input type="text" id="wordInput" placeholder="Type the word here..." autofocus>
         
         <div id="button-group">
-            <button id="speakWordButton_desktop">🔊 Hear Word</button>
-            <button id="speakSentenceButton_desktop">📖 Context</button>
+            <button id="speakWordButton">🔊 Hear Word</button>
+            <button id="speakSentenceButton">📖 Hear Sentence</button>
+            <button id="submitButton">✅ Submit Answer</button>
         </div>
 
-        <button id="submitButton" style="display: none;">✅ Submit Answer</button>
+        <div id="message"></div>
+        <button id="continueButton">➡️ Continue</button> 
     </div>
     
     <div id="results">
@@ -237,7 +210,8 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody>
+                </tbody>
         </table>
     </div>
 </div>
@@ -271,23 +245,21 @@
     let currentWordIndex = 0;
     let score = 0;
     let resultsLog = []; 
-    let initialized = false; 
-
+    
     const progressEl = document.getElementById('progress');
     const scoreEl = document.getElementById('score');
-    const progressBarContainerEl = document.getElementById('progressBarContainer');
+    const progressBarContainerEl = document.getElementById('progressBarContainer'); // Changed from progressBarEl
     const inputEl = document.getElementById('wordInput');
     const messageEl = document.getElementById('message');
     const speakWordButtonEl = document.getElementById('speakWordButton');
-    const speakSentenceButtonEl = document.getElementById('speakSentenceButton'); 
+    const speakSentenceButtonEl = document.getElementById('speakSentenceButton');
+    const submitButtonEl = document.getElementById('submitButton');
     const continueButtonEl = document.getElementById('continueButton');
     const testInterfaceEl = document.getElementById('test-interface');
+    const resultsEl = document.getElementById('results');
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
     const contextDisplayEl = document.getElementById('contextDisplay'); 
     const statusAreaEl = document.getElementById('status-area');
-    
-    const speakWordDesktopEl = document.getElementById('speakWordButton_desktop');
-    const speakSentenceDesktopEl = document.getElementById('speakSentenceButton_desktop');
 
 
     // --- 2. SPEECH SYNTHESIS SETUP ---
@@ -299,6 +271,7 @@
                null; 
     }
     
+    // Helper function to create the Utterance with UK voice settings
     function createUtterance(text) {
         const utterance = new SpeechSynthesisUtterance(text);
         const ukVoice = getUKVoice();
@@ -312,8 +285,6 @@
     }
 
     function speakWord() {
-        // NEW: Ensure initialization happens before speaking
-        initSpeech(); 
         if (currentWordIndex >= spellingList.length) return;
         
         const word = spellingList[currentWordIndex].word;
@@ -321,17 +292,16 @@
         
         messageEl.textContent = "🔊 Speaking the word...";
         contextDisplayEl.style.display = 'none'; 
-        continueButtonEl.style.display = 'none'; 
         speechSynthesis.speak(utterance);
         inputEl.focus(); 
     }
     
+    // Helper function to safely escape regex characters
     function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
     }
 
     function speakSentence() {
-        initSpeech();
         if (currentWordIndex >= spellingList.length) return;
 
         const item = spellingList[currentWordIndex];
@@ -345,9 +315,7 @@
         
         contextDisplayEl.innerHTML = blankedSentence;
         contextDisplayEl.style.display = 'block';
-        messageEl.textContent = "📖 Speaking the context sentence...";
-        
-        continueButtonEl.style.display = 'none'; 
+        messageEl.textContent = "📖 Speaking the sentence context...";
 
         speechSynthesis.speak(utterance);
         inputEl.focus(); 
@@ -356,21 +324,20 @@
     // --- 3. TEST LOGIC ---
 
     function toggleButtons(enable) {
+        submitButtonEl.disabled = !enable;
         speakWordButtonEl.disabled = !enable;
         speakSentenceButtonEl.disabled = !enable;
-        if (speakWordDesktopEl) speakWordDesktopEl.disabled = !enable;
-        if (speakSentenceDesktopEl) speakSentenceDesktopEl.disabled = !enable;
         inputEl.disabled = !enable;
     }
 
+    // NEW: Adjusts the progress bar and status area width to match input
     function adjustProgressBarWidth() {
-        setTimeout(() => {
-            const inputWidth = inputEl.offsetWidth;
-            progressBarContainerEl.style.width = `${inputWidth}px`;
-            statusAreaEl.style.width = `${inputWidth}px`;
-        }, 0);
+        const inputWidth = inputEl.offsetWidth;
+        progressBarContainerEl.style.width = `${inputWidth}px`;
+        statusAreaEl.style.width = `${inputWidth}px`;
     }
 
+    // NEW: Updates the score display and the segmented progress bar
     function updateScoreAndProgress() {
         const wordsCompleted = resultsLog.length;
         const totalWords = spellingList.length;
@@ -381,12 +348,15 @@
             progressEl.textContent = `Word ${currentWordIndex + 1} of ${totalWords}`;
         }
 
+        // Clear existing segments
         progressBarContainerEl.innerHTML = '';
+
+        // Create a segment for each word
         for (let i = 0; i < totalWords; i++) {
             const segment = document.createElement('div');
             segment.classList.add('progressSegment');
-            
             if (i < wordsCompleted) {
+                // If this word has been completed, color it
                 const result = resultsLog[i];
                 if (result.isCorrect) {
                     segment.classList.add('correct');
@@ -408,7 +378,7 @@
         inputEl.focus(); 
         
         updateScoreAndProgress();
-        adjustProgressBarWidth();
+        adjustProgressBarWidth(); // Call to adjust width
     }
 
     function checkSpelling() {
@@ -420,12 +390,10 @@
 
         if (typedWord === "") {
             messageEl.textContent = "⚠️ Please type a word first!";
-            continueButtonEl.style.display = 'none';
             return;
         }
         
-        toggleButtons(false); 
-        
+        // Log the result
         resultsLog.push({
             index: currentWordIndex + 1,
             correctWord: correctWord,
@@ -433,6 +401,8 @@
             isCorrect: isCorrect
         });
         
+        toggleButtons(false); 
+
         if (isCorrect) {
             score++;
             messageEl.textContent = "✅ Correct! Moving to the next word...";
@@ -444,16 +414,14 @@
             currentWordIndex++;
             updateScoreAndProgress(); 
             continueButtonEl.style.display = 'inline-block';
-            inputEl.blur(); 
             continueButtonEl.focus(); 
         }
     }
 
     function displayResults() {
-        document.getElementById('results').style.display = 'block';
         testInterfaceEl.style.display = 'none';
+        resultsEl.style.display = 'block';
 
-        document.querySelector('#resultsTable tbody').innerHTML = '';
         resultsLog.forEach(log => {
             const row = resultsTableBodyEl.insertRow();
             row.className = log.isCorrect ? 'correct' : 'incorrect';
@@ -470,74 +438,56 @@
             updateProgress();
             speakWord();
         } else {
+            // Test Finished!
             progressEl.textContent = "TEST FINISHED!";
             scoreEl.textContent = `Final Score: ${score} / ${spellingList.length}`;
             messageEl.textContent = `🎉 You scored ${score} out of ${spellingList.length}! Great effort!`;
             
+            // Ensure the final state of the progress bar reflects all words
             updateScoreAndProgress(); 
+
             displayResults(); 
 
-            // Set up restart button
             speakWordButtonEl.textContent = 'Start New Test';
             speakWordButtonEl.onclick = () => window.location.reload(); 
             speakWordButtonEl.style.backgroundColor = '#4a7d97';
+            speakWordButtonEl.style.display = 'inline-block';
             
             speakSentenceButtonEl.style.display = 'none';
-            document.getElementById('button-group').style.display = 'none';
-            document.getElementById('secondary-buttons-mobile').style.display = 'none';
-        }
-    }
-    
-    // NEW: Function to handle the very first speech initiation
-    function initSpeech() {
-        if (!initialized) {
-            initialized = true;
-            // The audio will be handled by the current button click/key press that called this function
-            // We just set up the UI state here, and the calling function (speakWord/speakSentence)
-            // will immediately follow with the audio command.
-            updateProgress(); 
+            submitButtonEl.style.display = 'none';
+            continueButtonEl.style.display = 'none'; 
         }
     }
 
     // --- 4. EVENT LISTENERS ---
     
-    // Attach the functions directly to the buttons. 
-    // The functions now internally call initSpeech() if needed.
     speakWordButtonEl.addEventListener('click', speakWord);
     speakSentenceButtonEl.addEventListener('click', speakSentence); 
+    submitButtonEl.addEventListener('click', checkSpelling);
     
-    speakWordDesktopEl.addEventListener('click', speakWord);
-    speakSentenceDesktopEl.addEventListener('click', speakSentence);
-
-    // Enter Key is the primary submission method
-    inputEl.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault(); 
-            if (continueButtonEl.style.display === 'inline-block') {
-                continueButtonEl.click();
-            } else if (!inputEl.disabled) { 
-                // We call initSpeech here to ensure the engine starts on the very first
-                // attempt to submit if the user didn't click a 'Hear' button first.
-                initSpeech(); 
-                checkSpelling();
-            }
-        }
-    });
-
     continueButtonEl.addEventListener('click', function() {
         nextStep();
         inputEl.focus(); 
     });
     
+    inputEl.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); 
+            if (continueButtonEl.style.display === 'inline-block') {
+                continueButtonEl.click();
+            } else if (!submitButtonEl.disabled) {
+                checkSpelling();
+            }
+        }
+    });
+
+    // Adjust width on window resize
     window.addEventListener('resize', adjustProgressBarWidth);
 
     // --- 5. INITIALISATION ---
+    updateProgress();
+    setTimeout(speakWord, 500); 
     
-    // Initial UI setup (sets word 1 of 20, score 0/0). 
-    // We DON'T call speakWord() here. Audio must wait for user interaction.
-    updateProgress(); 
-    
-    window.onload = adjustProgressBarWidth;
 </script>
 
 </body>
