@@ -14,9 +14,6 @@
             padding: 20px;
             background-color: #f0f8ff; 
             color: #333;
-            /* Prevents strange scrolling/selection issues on iOS */
-            -webkit-user-select: none; 
-            user-select: none;
         }
         #container {
             background-color: white;
@@ -26,9 +23,6 @@
             width: 90%;
             max-width: 650px; 
             text-align: center;
-            /* Ensure container is not buried */
-            z-index: 10; 
-            position: relative;
         }
         
         /* Status and Progress Area */
@@ -89,9 +83,6 @@
             border: 2px solid #ccc;
             border-radius: 8px;
             text-align: center;
-            /* Crucial for iOS/Android: ensure input is tappable */
-            z-index: 20; 
-            position: relative;
         }
         
         /* Button Group - Desktop */
@@ -106,9 +97,6 @@
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s;
-            /* Crucial for iOS: ensure buttons are tappable */
-            z-index: 20; 
-            position: relative;
         }
         #speakWordButton { background-color: #ff9900; color: white; }
         #speakWordButton:hover { background-color: #e68a00; }
@@ -157,8 +145,6 @@
                 flex-direction: column;
                 width: 90%;
                 margin: 0 auto;
-                z-index: 20; /* Ensure buttons are above potential keyboard overlay layers */
-                position: relative;
             }
             #button-container-mobile button {
                 width: 100%; 
@@ -166,6 +152,7 @@
                 font-size: 1em;
             }
             
+            /* Submit button is removed, Continue is the only action visible after failure */
             #submitButton { display: none !important; }
 
             /* Continue button must appear above message on mobile to avoid keyboard cover */
@@ -506,17 +493,19 @@
         if (!initialized) {
             initialized = true;
             // The audio will be handled by the current button click/key press that called this function
+            // We just set up the UI state here, and the calling function (speakWord/speakSentence)
+            // will immediately follow with the audio command.
             updateProgress(); 
         }
     }
 
     // --- 4. EVENT LISTENERS ---
     
-    // Mobile Buttons
+    // Attach the functions directly to the buttons. 
+    // The functions now internally call initSpeech() if needed.
     speakWordButtonEl.addEventListener('click', speakWord);
     speakSentenceButtonEl.addEventListener('click', speakSentence); 
     
-    // Desktop Buttons
     speakWordDesktopEl.addEventListener('click', speakWord);
     speakSentenceDesktopEl.addEventListener('click', speakSentence);
 
@@ -527,7 +516,8 @@
             if (continueButtonEl.style.display === 'inline-block') {
                 continueButtonEl.click();
             } else if (!inputEl.disabled) { 
-                // Call initSpeech here for the case where the user hits Enter first
+                // We call initSpeech here to ensure the engine starts on the very first
+                // attempt to submit if the user didn't click a 'Hear' button first.
                 initSpeech(); 
                 checkSpelling();
             }
@@ -543,6 +533,8 @@
 
     // --- 5. INITIALISATION ---
     
+    // Initial UI setup (sets word 1 of 20, score 0/0). 
+    // We DON'T call speakWord() here. Audio must wait for user interaction.
     updateProgress(); 
     
     window.onload = adjustProgressBarWidth;
@@ -550,5 +542,3 @@
 
 </body>
 </html>
-
-
