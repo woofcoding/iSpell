@@ -14,7 +14,9 @@
             background-color: #f0f8ff; 
             color: #333;
         }
+        /* Make container a positioned element so absolutely positioned children are placed relative to it */
         #container {
+            position: relative;
             background-color: white;
             padding: 40px;
             border-radius: 12px;
@@ -28,18 +30,17 @@
             margin-bottom: 25px;
         }
         
-        /* Fixed selector and sizing for the corner image */
+        /* Position the image inside the white container in the top-right corner */
         .corner-woofs {
-            position: fixed;
-            top: 8px;
-            right: 8px;
-            width: 48px;       /* desired visible size */
-            max-width: 10vh;   /* caps size relative to viewport for very small screens */
-            height: auto;      /* preserve aspect ratio */
-            z-index: 9999;     /* sit above other content */
+            position: absolute;   /* placed relative to #container */
+            top: 12px;            /* adjust to move up/down inside the container */
+            right: 12px;          /* adjust to move left/right inside the container */
+            width: 48px;          /* desired visible size */
+            height: auto;         /* preserve aspect ratio */
+            z-index: 10;          /* above container content */
             pointer-events: none; /* so clicks pass through (optional) */
         }
-        
+
         /* NEW: Score and Progress Styling */
         #status-area {
             display: flex;
