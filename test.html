@@ -118,7 +118,7 @@
     // ======================
     // WEEKS DATA (easy to update)
     // Add each week's object here. Each week has an id, label, date (YYYY-MM-DD) and words array.
-    // To add a new week: append another object (copy the format).
+    // To add a new week: append another object to the weeksData array.
     // ======================
     const weeksData = [
       {
@@ -158,6 +158,7 @@
     const weekSelectEl = document.getElementById('weekSelect');
     const weekLabelEl = document.getElementById('weekLabel');
     const weekDateEl = document.getElementById('weekDate');
+    const weekBarEl = document.getElementById('weekBar');
 
     const startScreenEl = document.getElementById('startScreen');
     const startButtonEl = document.getElementById('startButton');
@@ -275,7 +276,6 @@
     // prefer the latest week with date <= today; if none, choose the most recent (last in list)
     function findMostRelevantWeekIndex(sortedWeeks) {
       const today = new Date();
-      // normalize to date only
       const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       let candidate = -1;
       for (let i = 0; i < sortedWeeks.length; i++) {
@@ -414,17 +414,21 @@
       messageEl.textContent = `🎉 You scored ${score} out of ${spellingList.length}!`;
       updateScoreAndProgress();
       displayResults();
-      // keep "Hear Word" button behavior unchanged; user should use Start Again to restart
+      // Keep Hear Word button behavior unchanged; hide sentence/submit during results
       speakSentenceButtonEl.style.display = 'none';
       submitButtonEl.style.display = 'none';
       continueButtonEl.style.display = 'none';
-      // make sure Start Again is visible
+      // show week selector again so teacher can pick a new week (or to view/change)
+      weekBarEl.style.display = 'flex';
+      // ensure Start Again visible
       startAgainButtonEl.style.display = 'inline-block';
     }
 
     // start/reset helpers
     function startTest() {
       if (soundEnabled) ensureAudioContext();
+      // hide week selector once the test starts
+      weekBarEl.style.display = 'none';
       // restore UI if previously hidden
       speakSentenceButtonEl.style.display = 'inline-block';
       submitButtonEl.style.display = 'inline-block';
@@ -453,6 +457,8 @@
       testInterfaceEl.style.display = 'none';
       resultsEl.style.display = 'none';
       startScreenEl.style.display = 'flex';
+      // show week selector on start screen
+      weekBarEl.style.display = 'flex';
     }
 
     function resetAndStartImmediate() { resetToStartScreen(); setTimeout(startTest, 80); }
