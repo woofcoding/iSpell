@@ -14,6 +14,7 @@
             padding: 20px;
             background-color: #f0f8ff; 
             color: #333;
+            /* iOS/Touch Fixes */
             -webkit-user-select: none; 
             user-select: none;
         }
@@ -232,7 +233,7 @@
         </div>
         
         <div id="button-group-desktop">
-            <button class="speak-word-btn" id="speakWordButtonDesktop">🔊 Hear Word</button>
+            <input type="text" id="wordInputDesktop" placeholder="Type the word here..." autofocus style="display: none;"> <button class="speak-word-btn" id="speakWordButtonDesktop">🔊 Hear Word</button>
             <button class="speak-sentence-btn" id="speakSentenceButtonDesktop">📖 Context</button>
         </div>
 
@@ -290,7 +291,8 @@
     const progressEl = document.getElementById('progress');
     const scoreEl = document.getElementById('score');
     const progressBarContainerEl = document.getElementById('progressBarContainer');
-    const inputEl = document.getElementById('wordInput');
+    // We use the mobile input for the main logic as it's the element that receives focus/input on both views
+    const inputEl = document.getElementById('wordInput'); 
     const messageEl = document.getElementById('message');
     const continueButtonEl = document.getElementById('continueButton');
     const testInterfaceEl = document.getElementById('test-interface');
@@ -379,11 +381,22 @@
     }
 
     function adjustProgressBarWidth() {
-        setTimeout(() => {
+        // Use requestAnimationFrame to ensure we measure after any layout changes
+        requestAnimationFrame(() => {
             const inputWidth = inputEl.offsetWidth;
-            progressBarContainerEl.style.width = `${inputWidth}px`;
-            statusAreaEl.style.width = `${inputWidth}px`;
-        }, 0);
+            // Only set width if input is visible (prevents errors on hidden elements)
+            if (inputWidth > 0) {
+                 progressBarContainerEl.style.width = `${inputWidth}px`;
+                 statusAreaEl.style.width = `${inputWidth}px`;
+            } else {
+                 // Fallback for desktop view if mobile input is hidden (unlikely with this setup)
+                 const desktopGroup = document.getElementById('button-group-desktop');
+                 if (desktopGroup.offsetWidth > 0) {
+                     progressBarContainerEl.style.width = `${desktopGroup.offsetWidth}px`;
+                     statusAreaEl.style.width = `${desktopGroup.offsetWidth}px`;
+                 }
+            }
+        });
     }
 
     function updateScoreAndProgress() {
@@ -398,154 +411,4 @@
 
         progressBarContainerEl.innerHTML = '';
         for (let i = 0; i < totalWords; i++) {
-            const segment = document.createElement('div');
-            segment.classList.add('progressSegment');
-            
-            if (i < wordsCompleted) {
-                const result = resultsLog[i];
-                if (result.isCorrect) {
-                    segment.classList.add('correct');
-                } else {
-                    segment.classList.add('incorrect');
-                }
-            }
-            progressBarContainerEl.appendChild(segment);
-        }
-    }
-
-    function updateProgress() {
-        inputEl.value = '';
-        messageEl.textContent = '';
-        contextDisplayEl.textContent = '';
-        contextDisplayEl.style.display = 'none';
-        continueButtonEl.style.display = 'none'; 
-        toggleButtons(true); 
-        inputEl.focus(); 
-        
-        updateScoreAndProgress();
-        adjustProgressBarWidth();
-    }
-
-    function checkSpelling() {
-        if (currentWordIndex >= spellingList.length) return;
-
-        const typedWord = inputEl.value.trim();
-        const correctWord = spellingList[currentWordIndex].word;
-        const isCorrect = typedWord.toLowerCase() === correctWord.toLowerCase();
-
-        if (typedWord === "") {
-            messageEl.textContent = "⚠️ Please type a word first!";
-            continueButtonEl.style.display = 'none';
-            return;
-        }
-        
-        toggleButtons(false); 
-        
-        resultsLog.push({
-            index: currentWordIndex + 1,
-            correctWord: correctWord,
-            submittedWord: typedWord,
-            isCorrect: isCorrect
-        });
-        
-        if (isCorrect) {
-            score++;
-            messageEl.textContent = "✅ Correct! Moving to the next word...";
-            currentWordIndex++;
-            updateScoreAndProgress(); 
-            setTimeout(nextStep, 1000); 
-        } else {
-            messageEl.textContent = `❌ Incorrect. The correct spelling was: "${correctWord}".`;
-            currentWordIndex++;
-            updateScoreAndProgress(); 
-            continueButtonEl.style.display = 'inline-block';
-            inputEl.blur(); 
-            continueButtonEl.focus(); 
-        }
-    }
-
-    function displayResults() {
-        document.getElementById('results').style.display = 'block';
-        testInterfaceEl.style.display = 'none';
-
-        document.querySelector('#resultsTable tbody').innerHTML = '';
-        resultsLog.forEach(log => {
-            const row = resultsTableBodyEl.insertRow();
-            row.className = log.isCorrect ? 'correct' : 'incorrect';
-
-            const cell1 = row.insertCell(); cell1.textContent = log.index;
-            const cell2 = row.insertCell(); cell2.textContent = log.submittedWord;
-            const cell3 = row.insertCell(); cell3.textContent = log.correctWord;
-            const cell4 = row.insertCell(); cell4.textContent = log.isCorrect ? 'Correct' : 'Incorrect';
-        });
-    }
-
-    function nextStep() {
-        if (currentWordIndex < spellingList.length) {
-            updateProgress();
-            speakWord();
-        } else {
-            progressEl.textContent = "TEST FINISHED!";
-            scoreEl.textContent = `Final Score: ${score} / ${spellingList.length}`;
-            messageEl.textContent = `🎉 You scored ${score} out of ${spellingList.length}! Great effort!`;
-            
-            updateScoreAndProgress(); 
-            displayResults(); 
-
-            // Set up restart button
-            speakWordButtonMobileEl.textContent = 'Start New Test';
-            speakWordButtonMobileEl.onclick = () => window.location.reload(); 
-            speakWordButtonMobileEl.style.backgroundColor = '#4a7d97';
-            
-            speakSentenceButtonMobileEl.style.display = 'none';
-            document.getElementById('button-group-desktop').style.display = 'none';
-            document.getElementById('secondary-buttons-mobile').style.display = 'none';
-        }
-    }
-    
-    function initSpeech() {
-        if (!initialized) {
-            initialized = true;
-            updateProgress(); 
-        }
-    }
-
-    // --- 4. EVENT LISTENERS ---
-    
-    // Mobile Buttons
-    speakWordButtonMobileEl.addEventListener('click', speakWord);
-    speakSentenceButtonMobileEl.addEventListener('click', speakSentence); 
-    
-    // Desktop Buttons
-    speakWordButtonDesktopEl.addEventListener('click', speakWord);
-    speakSentenceButtonDesktopEl.addEventListener('click', speakSentence);
-
-    // Enter Key is the primary submission method
-    inputEl.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault(); 
-            if (continueButtonEl.style.display === 'inline-block') {
-                continueButtonEl.click();
-            } else if (!inputEl.disabled) { 
-                initSpeech(); 
-                checkSpelling();
-            }
-        }
-    });
-
-    continueButtonEl.addEventListener('click', function() {
-        nextStep();
-        inputEl.focus(); 
-    });
-    
-    window.addEventListener('resize', adjustProgressBarWidth);
-
-    // --- 5. INITIALISATION ---
-    
-    updateProgress(); 
-    
-    window.onload = adjustProgressBarWidth;
-</script>
-
-</body>
-</html>
+            const
