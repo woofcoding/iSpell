@@ -11,10 +11,62 @@
     h1{color:var(--accent);margin:0 0 10px; text-align: center;}
     /* corner image */
     .corner-woofs{position:absolute;top:12px;right:12px;width:64px;height:auto;pointer-events:none}
-    /* controls in top-left */
-    .top-controls{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:8px;z-index:11}
+    
+    /* Settings Icon */
+    .top-controls{
+        position:absolute;
+        top:12px;
+        left:12px;
+        z-index:11;
+    }
+    #settingsIcon {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--accent);
+        padding: 0;
+        margin: 0;
+        line-height: 1;
+        outline-offset: 2px;
+    }
+    
+    /* Settings Panel/Modal */
+    #settingsPanel {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 12px;
+        z-index: 20;
+        display: none;
+        padding: 28px;
+        box-sizing: border-box;
+        flex-direction: column;
+        gap: 15px;
+    }
+    #settingsPanel h2 {
+        color: var(--accent);
+        margin: 0 0 15px;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+    }
+    #closeSettingsButton {
+        align-self: flex-end;
+        background: #ccc;
+        color: #333;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+    /* Controls and Toggles */
     .toggle-row{display:flex;align-items:center;gap:8px;font-size:.95rem;color:#555;user-select:none}
     .toggle-row input{width:18px;height:18px;cursor:pointer}
+
     /* week selector area */
     #weekBar{display:flex;align-items:center;gap:12px;margin:8px 0 18px;flex-wrap:wrap;justify-content:center}
     #weekBar label{font-weight:600;color:#555}
@@ -59,7 +111,14 @@
   <div id="container">
     <img class="corner-woofs" src="Woofs.png" alt="Woofs">
 
-    <div class="top-controls" aria-hidden="false">
+    <div class="top-controls">
+      <button id="settingsIcon" aria-label="Settings">⚙️</button>
+    </div>
+
+    <div id="settingsPanel" role="dialog" aria-modal="true" aria-hidden="true" style="display: none;">
+      <button id="closeSettingsButton">X Close Settings</button>
+      <h2>⚙️ Test Settings</h2>
+      
       <label class="toggle-row" for="soundToggle">
         <input id="soundToggle" type="checkbox" /> <span id="soundLabel">Sound effects</span>
       </label>
@@ -67,7 +126,11 @@
         <input id="showSentenceToggle" type="checkbox" /> <span id="showSentenceLabel">Show sentence</span>
       </label>
       <label class="toggle-row" for="autoSpeakSentenceToggle">
-        <input id="autoSpeakSentenceToggle" type="checkbox" /> <span id="autoSpeakSentenceLabel">Speak sentence</span>
+        <input id="autoSpeakSentenceToggle" type="checkbox" /> <span id="autoSpeakSentenceLabel">Speak word then sentence</span>
+      </label>
+      
+      <label class="toggle-row" for="disableSpellcheckToggle">
+        <input id="disableSpellcheckToggle" type="checkbox" /> <span id="disableSpellcheckLabel">Disable browser spellcheck (No red line)</span>
       </label>
     </div>
 
@@ -242,35 +305,55 @@
     const startAgainButtonEl = document.getElementById('startAgainButton');
     const menuButtonEl = document.getElementById('menuButton');
 
+    // Settings Panel Refs
+    const settingsIconEl = document.getElementById('settingsIcon');
+    const settingsPanelEl = document.getElementById('settingsPanel');
+    const closeSettingsButtonEl = document.getElementById('closeSettingsButton');
+
     // toggles
     const soundToggleEl = document.getElementById('soundToggle');
     const showSentenceToggleEl = document.getElementById('showSentenceToggle');
-    const autoSpeakSentenceToggleEl = document.getElementById('autoSpeakSentenceToggle'); // NEW REF
-    
+    const autoSpeakSentenceToggleEl = document.getElementById('autoSpeakSentenceToggle'); 
+    const disableSpellcheckToggleEl = document.getElementById('disableSpellcheckToggle'); // NEW REF
+
     const SOUND_KEY = 'spellingSoundEnabled';
     const SHOW_SENTENCE_KEY = 'spellingShowSentence';
-    const AUTO_SPEAK_SENTENCE_KEY = 'spellingAutoSpeakSentence'; // NEW KEY
-    
+    const AUTO_SPEAK_SENTENCE_KEY = 'spellingAutoSpeakSentence'; 
+    const DISABLE_SPELLCHECK_KEY = 'spellingDisableSpellcheck'; // NEW KEY
+
     let soundEnabled = localStorage.getItem(SOUND_KEY) === null ? true : localStorage.getItem(SOUND_KEY) === 'true';
     let showSentenceEnabled = localStorage.getItem(SHOW_SENTENCE_KEY) === null ? true : localStorage.getItem(SHOW_SENTENCE_KEY) === 'true';
-    let autoSpeakSentenceEnabled = localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === null ? true : localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === 'true'; // NEW STATE, default to TRUE
-    
+    let autoSpeakSentenceEnabled = localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === null ? true : localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === 'true'; 
+    let disableSpellcheckEnabled = localStorage.getItem(DISABLE_SPELLCHECK_KEY) === null ? false : localStorage.getItem(DISABLE_SPELLCHECK_KEY) === 'true'; // NEW STATE, default to false
+
+    // Apply initial state to toggles
     soundToggleEl.checked = soundEnabled;
     showSentenceToggleEl.checked = showSentenceEnabled;
-    autoSpeakSentenceToggleEl.checked = autoSpeakSentenceEnabled; // NEW CHECKED
-    
+    autoSpeakSentenceToggleEl.checked = autoSpeakSentenceEnabled; 
+    disableSpellcheckToggleEl.checked = disableSpellcheckEnabled; // NEW CHECKED
+
     const soundLabelEl = document.getElementById('soundLabel');
     const showSentenceLabelEl = document.getElementById('showSentenceLabel');
-    const autoSpeakSentenceLabelEl = document.getElementById('autoSpeakSentenceLabel'); // NEW REF
-    
-    soundLabelEl.textContent = soundEnabled ? 'Sound effects' : 'Sound effects (off)';
-    showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence' : 'Show sentence (off)';
-    autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence' : 'Speak word then sentence (off)'; // NEW LABEL TEXT
+    const autoSpeakSentenceLabelEl = document.getElementById('autoSpeakSentenceLabel'); 
+    const disableSpellcheckLabelEl = document.getElementById('disableSpellcheckLabel'); // NEW REF
+
+    // Set initial label text
+    soundLabelEl.textContent = soundEnabled ? 'Sound effects (ON)' : 'Sound effects (OFF)';
+    showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence (ON)' : 'Show sentence (OFF)';
+    autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence (ON)' : 'Speak word then sentence (OFF)'; 
+    disableSpellcheckLabelEl.textContent = disableSpellcheckEnabled ? 'Disable browser spellcheck (ON)' : 'Disable browser spellcheck (OFF)'; // NEW LABEL TEXT
+
+    // Apply initial spellcheck state to input field
+    inputEl.spellcheck = !disableSpellcheckEnabled;
+
+    // ======================
+    // Toggle Event Listeners
+    // ======================
 
     soundToggleEl.addEventListener('change', () => {
       soundEnabled = soundToggleEl.checked;
       localStorage.setItem(SOUND_KEY, String(soundEnabled));
-      soundLabelEl.textContent = soundEnabled ? 'Sound effects' : 'Sound effects (off)';
+      soundLabelEl.textContent = soundEnabled ? 'Sound effects (ON)' : 'Sound effects (OFF)';
       if (!soundEnabled && audioCtx && audioCtx.state !== 'closed') audioCtx.suspend().catch(()=>{});
       else if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
     });
@@ -278,7 +361,7 @@
     showSentenceToggleEl.addEventListener('change', () => {
       showSentenceEnabled = showSentenceToggleEl.checked;
       localStorage.setItem(SHOW_SENTENCE_KEY, String(showSentenceEnabled));
-      showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence' : 'Show sentence (off)';
+      showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence (ON)' : 'Show sentence (OFF)';
       // update display for current word immediately
       if (testInterfaceEl.style.display !== 'none') {
         if (showSentenceEnabled) displayBlankedSentence(currentWordIndex);
@@ -286,12 +369,40 @@
       }
     });
     
-    // NEW TOGGLE LOGIC
     autoSpeakSentenceToggleEl.addEventListener('change', () => {
       autoSpeakSentenceEnabled = autoSpeakSentenceToggleEl.checked;
       localStorage.setItem(AUTO_SPEAK_SENTENCE_KEY, String(autoSpeakSentenceEnabled));
-      autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence' : 'Speak word then sentence (off)';
+      autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence (ON)' : 'Speak word then sentence (OFF)';
     });
+    
+    // NEW TOGGLE LOGIC: Disable Spellcheck
+    disableSpellcheckToggleEl.addEventListener('change', () => {
+      disableSpellcheckEnabled = disableSpellcheckToggleEl.checked;
+      localStorage.setItem(DISABLE_SPELLCHECK_KEY, String(disableSpellcheckEnabled));
+      disableSpellcheckLabelEl.textContent = disableSpellcheckEnabled ? 'Disable browser spellcheck (ON)' : 'Disable browser spellcheck (OFF)';
+      // The key change: set spellcheck attribute on the input field
+      inputEl.spellcheck = !disableSpellcheckEnabled; 
+    });
+
+    // ======================
+    // Settings Panel Logic
+    // ======================
+
+    settingsIconEl.addEventListener('click', () => {
+        settingsPanelEl.style.display = 'flex';
+        // Ensure the main test container is hidden/disabled for screen readers
+        document.getElementById('container').setAttribute('aria-hidden', 'true');
+        settingsPanelEl.setAttribute('aria-hidden', 'false');
+        closeSettingsButtonEl.focus();
+    });
+
+    closeSettingsButtonEl.addEventListener('click', () => {
+        settingsPanelEl.style.display = 'none';
+        document.getElementById('container').setAttribute('aria-hidden', 'false');
+        settingsPanelEl.setAttribute('aria-hidden', 'true');
+        settingsIconEl.focus();
+    });
+
 
     // ======================
     // Voice / audio
@@ -408,18 +519,23 @@
       inputEl.disabled = !enable;
     }
     
-    // UPDATED: Removed inputEl.focus() here, as it's now handled after speech ends
+    // UPDATED: No longer clears context display. Displays blanked sentence if toggle is checked.
     function updateProgressScreen() {
       inputEl.value = '';
       messageEl.textContent = ''; 
       const ctx = document.getElementById('contextDisplay');
-      ctx.textContent = '';
+      // Always hide context by default when moving to next step
       ctx.style.display = 'none';
+      ctx.textContent = '';
+      
       continueButtonEl.style.display = 'none';
       toggleButtons(true);
       updateScoreAndProgress();
-      // If "Show sentence" is enabled, display blanked sentence for the current word (but do not speak it)
-      if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
+      
+      // If "Show sentence" is enabled, display blanked sentence for the current word immediately
+      if (showSentenceToggleEl.checked) {
+          displayBlankedSentence(currentWordIndex);
+      }
     }
 
     function displayBlankedSentence(index) {
@@ -432,14 +548,14 @@
       ctx.style.display = 'block';
     }
     
-    // NEW: Function to speak word followed by sentence
+    // UPDATED: Removed the line that hides context display
     function speakWordAndSentence() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       const word = spellingList[currentWordIndex].word;
       const sentence = spellingList[currentWordIndex].sentence;
       
       messageEl.textContent = "🔊 Speaking the word, then the sentence...";
-      document.getElementById('contextDisplay').style.display = 'none';
+      // Removed: document.getElementById('contextDisplay').style.display = 'none';
 
       const wordUtt = createUtterance(word);
       const sentenceUtt = createUtterance(sentence);
@@ -449,17 +565,16 @@
         speechSynthesis.speak(sentenceUtt);
       };
       
-      // Once the full sequence is done, focus the input and show context if needed
+      // Once the full sequence is done, focus the input
       sentenceUtt.onend = () => {
-         messageEl.textContent = "Type the word here…"; // Clear 'Speaking' message
+         messageEl.textContent = "Type the word here…"; 
          inputEl.focus();
-         if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
       };
 
       speechSynthesis.speak(wordUtt);
     }
 
-    // UPDATED: speakWord now checks the autoSpeakSentenceToggleEl
+    // UPDATED: Removed the line that hides context display
     function speakWord() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       
@@ -471,27 +586,23 @@
       const word = spellingList[currentWordIndex].word;
       const utt = createUtterance(word);
       messageEl.textContent = "🔊 Speaking the word...";
-      document.getElementById('contextDisplay').style.display = 'none';
+      // Removed: document.getElementById('contextDisplay').style.display = 'none';
       
       utt.onend = () => {
          messageEl.textContent = "Type the word here…";
          inputEl.focus();
-         if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
       };
 
       speechSynthesis.speak(utt);
-      // Display blanked sentence immediately if the toggle is on, even if not auto-speaking
-      if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
     }
 
     function speakSentence() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       const item = spellingList[currentWordIndex];
-      const regex = new RegExp(escapeRegExp(item.word), 'gi');
-      const blanked = item.sentence.replace(regex, '______');
-      const ctx = document.getElementById('contextDisplay');
-      ctx.innerHTML = blanked;
-      ctx.style.display = 'block';
+      
+      // Always display the blanked sentence immediately when this button is pressed
+      displayBlankedSentence(currentWordIndex);
+      
       messageEl.textContent = "📖 Speaking the sentence context...";
       
       const utt = createUtterance(item.sentence);
@@ -632,7 +743,8 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        if (startScreenEl.style.display !== 'none') { e.preventDefault(); startTest(); }
+        if (settingsPanelEl.style.display === 'flex') { /* Do nothing if settings panel is open */ }
+        else if (startScreenEl.style.display !== 'none') { e.preventDefault(); startTest(); }
         else if (continueButtonEl.style.display === 'block') { e.preventDefault(); continueButtonEl.click(); }
         else if (!submitButtonEl.disabled) { e.preventDefault(); checkSpelling(); }
       }
@@ -652,4 +764,3 @@
   </script>
 </body>
 </html>
-
