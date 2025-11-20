@@ -59,7 +59,6 @@
   <div id="container">
     <img class="corner-woofs" src="Woofs.png" alt="Woofs">
 
-    <!-- top-left toggles: sound and show-sentence -->
     <div class="top-controls" aria-hidden="false">
       <label class="toggle-row" for="soundToggle">
         <input id="soundToggle" type="checkbox" /> <span id="soundLabel">Sound effects</span>
@@ -67,28 +66,26 @@
       <label class="toggle-row" for="showSentenceToggle">
         <input id="showSentenceToggle" type="checkbox" /> <span id="showSentenceLabel">Show sentence</span>
       </label>
+      <label class="toggle-row" for="autoSpeakSentenceToggle">
+        <input id="autoSpeakSentenceToggle" type="checkbox" /> <span id="autoSpeakSentenceLabel">Speak word then sentence</span>
+      </label>
     </div>
 
     <h1>📝 Weekly Spelling Test</h1>
 
-    <!-- week selector + info -->
     <div id="weekBar" aria-hidden="false">
       <label for="weekSelect">Choose week:</label>
       <select id="weekSelect" aria-label="Choose week"></select>
       <div id="weekInfo" aria-hidden="false">
-  <!--      <div id="weekLabel"></div> -->
-  <!--     <div id="weekDate"></div> -->
-      </div>
+  </div>
     </div>
 
-    <!-- start screen -->
     <div id="startScreen" role="region" aria-label="Start screen">
       <p id="startBlurb">Press Start to begin the spelling test for the selected week.</p>
       <button id="startButton" class="primary-action">Start Test</button>
       <p style="font-size:.9rem;color:#666;margin:0">Tip: press Enter once the test starts to submit answers quickly.</p>
     </div>
 
-    <!-- test interface -->
     <div id="test-interface" style="display:none">
       <div id="status-area">
         <p id="progress">Word 1 of 20</p>
@@ -110,7 +107,6 @@
       <button id="continueButton">➡️ Continue</button>
     </div>
 
-    <!-- results -->
     <div id="results" aria-live="polite">
       <h2>Detailed Results Log</h2>
       <table id="resultsTable">
@@ -249,16 +245,27 @@
     // toggles
     const soundToggleEl = document.getElementById('soundToggle');
     const showSentenceToggleEl = document.getElementById('showSentenceToggle');
+    const autoSpeakSentenceToggleEl = document.getElementById('autoSpeakSentenceToggle'); // NEW REF
+    
     const SOUND_KEY = 'spellingSoundEnabled';
     const SHOW_SENTENCE_KEY = 'spellingShowSentence';
+    const AUTO_SPEAK_SENTENCE_KEY = 'spellingAutoSpeakSentence'; // NEW KEY
+    
     let soundEnabled = localStorage.getItem(SOUND_KEY) === null ? true : localStorage.getItem(SOUND_KEY) === 'true';
     let showSentenceEnabled = localStorage.getItem(SHOW_SENTENCE_KEY) === null ? true : localStorage.getItem(SHOW_SENTENCE_KEY) === 'true';
+    let autoSpeakSentenceEnabled = localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === null ? false : localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === 'true'; // NEW STATE, default to false
+    
     soundToggleEl.checked = soundEnabled;
     showSentenceToggleEl.checked = showSentenceEnabled;
+    autoSpeakSentenceToggleEl.checked = autoSpeakSentenceEnabled; // NEW CHECKED
+    
     const soundLabelEl = document.getElementById('soundLabel');
     const showSentenceLabelEl = document.getElementById('showSentenceLabel');
+    const autoSpeakSentenceLabelEl = document.getElementById('autoSpeakSentenceLabel'); // NEW REF
+    
     soundLabelEl.textContent = soundEnabled ? 'Sound effects' : 'Sound effects (off)';
     showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence' : 'Show sentence (off)';
+    autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence' : 'Speak word then sentence (off)'; // NEW LABEL TEXT
 
     soundToggleEl.addEventListener('change', () => {
       soundEnabled = soundToggleEl.checked;
@@ -277,6 +284,13 @@
         if (showSentenceEnabled) displayBlankedSentence(currentWordIndex);
         else { document.getElementById('contextDisplay').style.display = 'none'; }
       }
+    });
+    
+    // NEW TOGGLE LOGIC
+    autoSpeakSentenceToggleEl.addEventListener('change', () => {
+      autoSpeakSentenceEnabled = autoSpeakSentenceToggleEl.checked;
+      localStorage.setItem(AUTO_SPEAK_SENTENCE_KEY, String(autoSpeakSentenceEnabled));
+      autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence' : 'Speak word then sentence (off)';
     });
 
     // ======================
@@ -344,11 +358,12 @@
       loadWeek(sorted[defaultIndex]);
     }
 
-function findMostRelevantWeekIndex(sortedWeeks) {
+    // UPDATED FUNCTION TO ALWAYS SELECT THE NEWEST SET
+    function findMostRelevantWeekIndex(sortedWeeks) {
       // Always select the last, most recent week in the list (which is already sorted by date).
       return sortedWeeks.length ? sortedWeeks.length - 1 : 0;
     }
-    
+
     function loadWeekById(id) {
       const week = weeksData.find(w => w.id === id);
       if (week) loadWeek(week);
@@ -392,15 +407,16 @@ function findMostRelevantWeekIndex(sortedWeeks) {
       speakSentenceButtonEl.disabled = !enable;
       inputEl.disabled = !enable;
     }
+    
+    // UPDATED: Removed inputEl.focus() here, as it's now handled after speech ends
     function updateProgressScreen() {
       inputEl.value = '';
-      messageEl.textContent = '';
+      messageEl.textContent = ''; 
       const ctx = document.getElementById('contextDisplay');
       ctx.textContent = '';
       ctx.style.display = 'none';
       continueButtonEl.style.display = 'none';
       toggleButtons(true);
-      inputEl.focus();
       updateScoreAndProgress();
       // If "Show sentence" is enabled, display blanked sentence for the current word (but do not speak it)
       if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
@@ -415,16 +431,56 @@ function findMostRelevantWeekIndex(sortedWeeks) {
       ctx.innerHTML = blanked;
       ctx.style.display = 'block';
     }
+    
+    // NEW: Function to speak word followed by sentence
+    function speakWordAndSentence() {
+      if (!spellingList || currentWordIndex >= spellingList.length) return;
+      const word = spellingList[currentWordIndex].word;
+      const sentence = spellingList[currentWordIndex].sentence;
+      
+      messageEl.textContent = "🔊 Speaking the word, then the sentence...";
+      document.getElementById('contextDisplay').style.display = 'none';
 
+      const wordUtt = createUtterance(word);
+      const sentenceUtt = createUtterance(sentence);
+
+      // Chain the sentence to the word's end
+      wordUtt.onend = () => {
+        speechSynthesis.speak(sentenceUtt);
+      };
+      
+      // Once the full sequence is done, focus the input and show context if needed
+      sentenceUtt.onend = () => {
+         messageEl.textContent = "Type the word here…"; // Clear 'Speaking' message
+         inputEl.focus();
+         if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
+      };
+
+      speechSynthesis.speak(wordUtt);
+    }
+
+    // UPDATED: speakWord now checks the autoSpeakSentenceToggleEl
     function speakWord() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
+      
+      if (autoSpeakSentenceToggleEl.checked) {
+          speakWordAndSentence();
+          return;
+      }
+      
       const word = spellingList[currentWordIndex].word;
       const utt = createUtterance(word);
       messageEl.textContent = "🔊 Speaking the word...";
       document.getElementById('contextDisplay').style.display = 'none';
+      
+      utt.onend = () => {
+         messageEl.textContent = "Type the word here…";
+         inputEl.focus();
+         if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
+      };
+
       speechSynthesis.speak(utt);
-      inputEl.focus();
-      // If show-sentence is enabled, display the blanked sentence (but don't read it)
+      // Display blanked sentence immediately if the toggle is on, even if not auto-speaking
       if (showSentenceToggleEl.checked) displayBlankedSentence(currentWordIndex);
     }
 
@@ -437,7 +493,14 @@ function findMostRelevantWeekIndex(sortedWeeks) {
       ctx.innerHTML = blanked;
       ctx.style.display = 'block';
       messageEl.textContent = "📖 Speaking the sentence context...";
-      speechSynthesis.speak(createUtterance(item.sentence));
+      
+      const utt = createUtterance(item.sentence);
+      utt.onend = () => {
+         messageEl.textContent = "Type the word here…";
+         inputEl.focus();
+      };
+      
+      speechSynthesis.speak(utt);
       inputEl.focus();
     }
 
@@ -554,10 +617,12 @@ function findMostRelevantWeekIndex(sortedWeeks) {
     // Event wiring
     // ======================
     startButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); startTest(); });
+    // Speak word button logic is now a wrapper for the core speakWord function
     speakWordButtonEl.addEventListener('click', ()=> {
       if (soundEnabled) ensureAudioContext();
       if (testInterfaceEl.style.display === 'none') { startTest(); return; }
-      speakWord();
+      // This button always re-speaks the word (with the new auto-sentence logic if toggled)
+      speakWord(); 
     });
     speakSentenceButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); speakSentence(); });
     submitButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); checkSpelling(); });
@@ -568,7 +633,7 @@ function findMostRelevantWeekIndex(sortedWeeks) {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         if (startScreenEl.style.display !== 'none') { e.preventDefault(); startTest(); }
-        else if (continueButtonEl.style.display === 'inline-block') { e.preventDefault(); continueButtonEl.click(); }
+        else if (continueButtonEl.style.display === 'block') { e.preventDefault(); continueButtonEl.click(); }
         else if (!submitButtonEl.disabled) { e.preventDefault(); checkSpelling(); }
       }
     });
@@ -587,8 +652,3 @@ function findMostRelevantWeekIndex(sortedWeeks) {
   </script>
 </body>
 </html>
-
-
-
-
-
