@@ -344,18 +344,11 @@
       loadWeek(sorted[defaultIndex]);
     }
 
-    function findMostRelevantWeekIndex(sortedWeeks) {
-      const today = new Date(); const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      let candidate = -1;
-      for (let i = 0; i < sortedWeeks.length; i++) {
-        const d = new Date(sortedWeeks[i].date);
-        if (isNaN(d)) continue;
-        if (d <= todayOnly) candidate = i;
-      }
-      if (candidate !== -1) return candidate;
+function findMostRelevantWeekIndex(sortedWeeks) {
+      // Always select the last, most recent week in the list (which is already sorted by date).
       return sortedWeeks.length ? sortedWeeks.length - 1 : 0;
     }
-
+    
     function loadWeekById(id) {
       const week = weeksData.find(w => w.id === id);
       if (week) loadWeek(week);
@@ -594,6 +587,7 @@
   </script>
 </body>
 </html>
+
 
 
 
