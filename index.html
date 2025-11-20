@@ -87,7 +87,7 @@
     .progressSegment.incorrect{background:#f44336}
     #contextDisplay{min-height:40px;margin:12px 0;padding:12px;border-radius:8px;border:2px dashed #008CBA;background:#e6f7ff;font-style:italic;display:none}
 
-    /* NEW STYLES: Input and Submit button side-by-side */
+    /* Input and Submit button side-by-side */
     #input-submit-group{
         display:flex;
         justify-content:center;
@@ -116,7 +116,7 @@
         white-space:nowrap;
     }
     
-    /* NEW STYLES: Say Again button group (old button-group) */
+    /* Say Again button group (old button-group) */
     #say-again-group{
         display:flex;
         justify-content:center;
@@ -136,6 +136,14 @@
     #message{margin-top:14px;text-align:center;font-weight:700;min-height:26px}
     /* results */
     #results{margin-top:22px;text-align:left;display:none}
+    /* NEW STYLE FOR FINAL SCORE DISPLAY */
+    #finalScoreDisplay{
+        color: var(--ok); 
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 10px 0 20px;
+        text-align: center;
+    }
     #results h2{color:var(--accent)}
     #resultsTable{width:100%;border-collapse:collapse;margin-top:8px}
     #resultsTable th,#resultsTable td{border:1px solid #ddd;padding:8px;text-align:center}
@@ -212,7 +220,7 @@
     </div>
 
     <div id="results" aria-live="polite">
-      <h2>Detailed Results Log</h2>
+      <h2 id="finalScoreDisplay"></h2> <h2>Detailed Results Log</h2>
       <table id="resultsTable">
         <thead>
           <tr><th>#</th><th>Your Spelling</th><th>Correct Spelling</th><th>Status</th></tr>
@@ -342,6 +350,7 @@
     const continueButtonEl = document.getElementById('continueButton');
 
     const resultsEl = document.getElementById('results');
+    const finalScoreDisplayEl = document.getElementById('finalScoreDisplay'); // NEW DOM Reference
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
     const startAgainButtonEl = document.getElementById('startAgainButton');
     const menuButtonEl = document.getElementById('menuButton');
@@ -416,7 +425,7 @@
       autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence (ON)' : 'Speak word then sentence (OFF)';
     });
     
-    // NEW TOGGLE LOGIC: Disable Spellcheck
+    // TOGGLE LOGIC: Disable Spellcheck
     disableSpellcheckToggleEl.addEventListener('change', () => {
       disableSpellcheckEnabled = disableSpellcheckToggleEl.checked;
       localStorage.setItem(DISABLE_SPELLCHECK_KEY, String(disableSpellcheckEnabled));
@@ -510,7 +519,7 @@
       loadWeek(sorted[defaultIndex]);
     }
 
-    // UPDATED FUNCTION TO ALWAYS SELECT THE NEWEST SET
+    // FUNCTION TO ALWAYS SELECT THE NEWEST SET
     function findMostRelevantWeekIndex(sortedWeeks) {
       // Always select the last, most recent week in the list (which is already sorted by date).
       return sortedWeeks.length ? sortedWeeks.length - 1 : 0;
@@ -559,7 +568,7 @@
       inputEl.disabled = !enable;
     }
     
-    // UPDATED: No longer clears context display. Displays blanked sentence if toggle is checked.
+    // Displays blanked sentence if toggle is checked.
     function updateProgressScreen() {
       inputEl.value = '';
       messageEl.textContent = ''; 
@@ -588,7 +597,7 @@
       ctx.style.display = 'block';
     }
     
-    // FIX APPLIED HERE: Removed unreliable check in wordUtt.onend
+    // Chains word and sentence speech.
     function speakWordAndSentence() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       const word = spellingList[currentWordIndex].word;
@@ -603,15 +612,14 @@
 
       // Chain the sentence to the word's end
       wordUtt.onend = () => {
-        // FIX: Removed conditional check. If the word finishes naturally, play the sentence.
-        // If the user cancelled speech (by pressing Submit or Say Again), wordUtt.onend will not fire.
+        // If the word finishes naturally, play the sentence.
         speechSynthesis.speak(sentenceUtt);
       };
 
       speechSynthesis.speak(wordUtt);
     }
 
-    // UPDATED: Focuses input and updates message immediately to allow typing during speech
+    // Focuses input and updates message immediately to allow typing during speech
     function speakWord() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       
@@ -640,7 +648,7 @@
     function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 
     function checkSpelling() {
-      // NEW: Cancel any ongoing speech when the user submits their answer
+      // Cancel any ongoing speech when the user submits their answer
       speechSynthesis.cancel(); 
 
       if (!spellingList || currentWordIndex >= spellingList.length) return;
@@ -677,9 +685,14 @@
       }
     }
 
+    // UPDATED to show score at the top
     function displayResults(){
       testInterfaceEl.style.display = 'none';
       resultsEl.style.display = 'block';
+      
+      // SET THE FINAL SCORE at the top of the results page
+      finalScoreDisplayEl.textContent = `${score} / ${spellingList.length}`;
+
       resultsTableBodyEl.innerHTML = '';
       for (const log of resultsLog) {
         const row = resultsTableBodyEl.insertRow();
@@ -694,14 +707,14 @@
     function finishTest() {
       progressEl.textContent = "TEST FINISHED!";
       scoreEl.textContent = `Final Score: ${score} / ${spellingList.length}`;
-      messageEl.textContent = `🎉 You scored ${score} out of ${spellingList.length}!`;
+      messageEl.textContent = `🎉 Test Complete!`; // Simplified message
       updateScoreAndProgress();
       displayResults();
       // hide buttons while on results
       sayAgainButtonEl.style.display = 'none';
       submitButtonEl.style.display = 'none';
       continueButtonEl.style.display = 'none';
-      // Hide week selector on results (user requested Menu/Home instead of selector on results)
+      // Hide week selector on results
       weekBarEl.style.display = 'none';
       // show Start Again and Menu
       startAgainButtonEl.style.display = 'inline-block';
