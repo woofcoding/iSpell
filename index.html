@@ -86,12 +86,51 @@
     .progressSegment.correct{background:#4CAF50}
     .progressSegment.incorrect{background:#f44336}
     #contextDisplay{min-height:40px;margin:12px 0;padding:12px;border-radius:8px;border:2px dashed #008CBA;background:#e6f7ff;font-style:italic;display:none}
-    #wordInput{padding:12px;margin:12px 0;width:80%;font-size:1.2rem;border-radius:8px;border:2px solid #ccc;text-align:center;display:block;margin-left:auto;margin-right:auto}
-    #button-group{display:flex;gap:10px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
-    button{padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
-    #speakWordButton{background:#ff9900;color:#fff}
-    #speakSentenceButton{background:var(--accent);color:#fff}
-    #submitButton{background:var(--ok);color:#fff}
+
+    /* NEW STYLES: Input and Submit button side-by-side */
+    #input-submit-group{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        gap:8px;
+        margin:12px auto;
+        width:80%;
+    }
+    #wordInput{
+        padding:12px;
+        flex-grow:1; /* Take up remaining space */
+        font-size:1.2rem;
+        border-radius:8px;
+        border:2px solid #ccc;
+        text-align:center;
+        max-width: calc(100% - 100px); 
+    }
+    #submitButton{
+        padding:12px 18px; /* Match input padding height */
+        border-radius:8px;
+        border:none;
+        cursor:pointer;
+        background:var(--ok);
+        color:#fff;
+        font-size:1.05rem;
+        white-space:nowrap;
+    }
+    
+    /* NEW STYLES: Say Again button group (old button-group) */
+    #say-again-group{
+        display:flex;
+        justify-content:center;
+        margin-bottom:12px;
+    }
+    #sayAgainButton{
+        background:#ff9900;
+        color:#fff;
+        padding:10px 14px;
+        border-radius:8px;
+        border:none;
+        cursor:pointer;
+    }
+    
     /* Center the continue button when visible */
     #continueButton{background:var(--bad);color:#fff;display:none;margin:12px auto 0; /* centered */ padding:10px 14px}
     #message{margin-top:14px;text-align:center;font-weight:700;min-height:26px}
@@ -104,7 +143,8 @@
     .incorrect{background:#ffe6e6}
     #startAgainButton{margin-top:12px;background:var(--ok);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;float:right}
     #menuButton{margin-top:12px;background:#4a7d97;color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;float:left}
-    @media (max-width:640px){ #status-area,#progressBarContainer,#wordInput{width:95%} }
+    /* UPDATED MEDIA QUERY */
+    @media (max-width:640px){ #status-area,#progressBarContainer,#input-submit-group{width:95%} }
   </style>
 </head>
 <body>
@@ -158,12 +198,13 @@
 
       <div id="contextDisplay" role="region" aria-live="polite"></div>
 
-      <input id="wordInput" type="text" placeholder="Type the word here…" autocomplete="off" />
+      <div id="input-submit-group"> 
+        <input id="wordInput" type="text" placeholder="Type the word here…" autocomplete="off" />
+        <button id="submitButton">✅ Submit</button>
+      </div>
 
-      <div id="button-group">
-        <button id="speakWordButton">🔊 Hear Word</button>
-        <button id="speakSentenceButton">📖 Hear Sentence</button>
-        <button id="submitButton">✅ Submit Answer</button>
+      <div id="say-again-group"> 
+        <button id="sayAgainButton">🔊 Say Again</button>
       </div>
 
       <div id="message" aria-live="polite"></div>
@@ -295,8 +336,8 @@
     const progressBarContainerEl = document.getElementById('progressBarContainer');
     const inputEl = document.getElementById('wordInput');
     const messageEl = document.getElementById('message');
-    const speakWordButtonEl = document.getElementById('speakWordButton');
-    const speakSentenceButtonEl = document.getElementById('speakSentenceButton');
+    // Renamed button references
+    const sayAgainButtonEl = document.getElementById('sayAgainButton');
     const submitButtonEl = document.getElementById('submitButton');
     const continueButtonEl = document.getElementById('continueButton');
 
@@ -314,34 +355,34 @@
     const soundToggleEl = document.getElementById('soundToggle');
     const showSentenceToggleEl = document.getElementById('showSentenceToggle');
     const autoSpeakSentenceToggleEl = document.getElementById('autoSpeakSentenceToggle'); 
-    const disableSpellcheckToggleEl = document.getElementById('disableSpellcheckToggle'); // NEW REF
+    const disableSpellcheckToggleEl = document.getElementById('disableSpellcheckToggle'); 
 
     const SOUND_KEY = 'spellingSoundEnabled';
     const SHOW_SENTENCE_KEY = 'spellingShowSentence';
     const AUTO_SPEAK_SENTENCE_KEY = 'spellingAutoSpeakSentence'; 
-    const DISABLE_SPELLCHECK_KEY = 'spellingDisableSpellcheck'; // NEW KEY
+    const DISABLE_SPELLCHECK_KEY = 'spellingDisableSpellcheck'; 
 
     let soundEnabled = localStorage.getItem(SOUND_KEY) === null ? true : localStorage.getItem(SOUND_KEY) === 'true';
     let showSentenceEnabled = localStorage.getItem(SHOW_SENTENCE_KEY) === null ? true : localStorage.getItem(SHOW_SENTENCE_KEY) === 'true';
     let autoSpeakSentenceEnabled = localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === null ? true : localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === 'true'; 
-    let disableSpellcheckEnabled = localStorage.getItem(DISABLE_SPELLCHECK_KEY) === null ? false : localStorage.getItem(DISABLE_SPELLCHECK_KEY) === 'true'; // NEW STATE, default to false
+    let disableSpellcheckEnabled = localStorage.getItem(DISABLE_SPELLCHECK_KEY) === null ? false : localStorage.getItem(DISABLE_SPELLCHECK_KEY) === 'true'; 
 
     // Apply initial state to toggles
     soundToggleEl.checked = soundEnabled;
     showSentenceToggleEl.checked = showSentenceEnabled;
     autoSpeakSentenceToggleEl.checked = autoSpeakSentenceEnabled; 
-    disableSpellcheckToggleEl.checked = disableSpellcheckEnabled; // NEW CHECKED
+    disableSpellcheckToggleEl.checked = disableSpellcheckEnabled; 
 
     const soundLabelEl = document.getElementById('soundLabel');
     const showSentenceLabelEl = document.getElementById('showSentenceLabel');
     const autoSpeakSentenceLabelEl = document.getElementById('autoSpeakSentenceLabel'); 
-    const disableSpellcheckLabelEl = document.getElementById('disableSpellcheckLabel'); // NEW REF
+    const disableSpellcheckLabelEl = document.getElementById('disableSpellcheckLabel'); 
 
     // Set initial label text
     soundLabelEl.textContent = soundEnabled ? 'Sound effects (ON)' : 'Sound effects (OFF)';
     showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence (ON)' : 'Show sentence (OFF)';
     autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence (ON)' : 'Speak word then sentence (OFF)'; 
-    disableSpellcheckLabelEl.textContent = disableSpellcheckEnabled ? 'Disable browser spellcheck (ON)' : 'Disable browser spellcheck (OFF)'; // NEW LABEL TEXT
+    disableSpellcheckLabelEl.textContent = disableSpellcheckEnabled ? 'Disable browser spellcheck (ON)' : 'Disable browser spellcheck (OFF)'; 
 
     // Apply initial spellcheck state to input field
     inputEl.spellcheck = !disableSpellcheckEnabled;
@@ -514,8 +555,7 @@
     }
     function toggleButtons(enable){
       submitButtonEl.disabled = !enable;
-      speakWordButtonEl.disabled = !enable;
-      speakSentenceButtonEl.disabled = !enable;
+      sayAgainButtonEl.disabled = !enable;
       inputEl.disabled = !enable;
     }
     
@@ -563,10 +603,11 @@
 
       // Chain the sentence to the word's end
       wordUtt.onend = () => {
-        speechSynthesis.speak(sentenceUtt);
+        // Only speak sentence if speech is not canceled (i.e. user hasn't submitted yet)
+        if (speechSynthesis.speaking || speechSynthesis.pending) {
+            speechSynthesis.speak(sentenceUtt);
+        }
       };
-      
-      // Removed: sentenceUtt.onend handler which previously focused the input.
 
       speechSynthesis.speak(wordUtt);
     }
@@ -574,6 +615,13 @@
     // UPDATED: Focuses input and updates message immediately to allow typing during speech
     function speakWord() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
+      
+      speechSynthesis.cancel(); // Cancel any previous speech before starting a new one
+
+      // If sentence context is not being auto-read, still ensure it's displayed if the toggle is ON
+      if (showSentenceToggleEl.checked) {
+        displayBlankedSentence(currentWordIndex);
+      }
       
       if (autoSpeakSentenceToggleEl.checked) {
           speakWordAndSentence();
@@ -586,26 +634,6 @@
       // Set message and focus immediately
       messageEl.textContent = "🔊 Speaking the word. Type the word here…";
       inputEl.focus();
-      
-      // Removed: utt.onend handler which previously focused the input.
-
-      speechSynthesis.speak(utt);
-    }
-
-    // UPDATED: Focuses input and updates message immediately to allow typing during speech
-    function speakSentence() {
-      if (!spellingList || currentWordIndex >= spellingList.length) return;
-      const item = spellingList[currentWordIndex];
-      
-      // Always display the blanked sentence immediately when this button is pressed
-      displayBlankedSentence(currentWordIndex);
-      
-      // Set message and focus immediately
-      messageEl.textContent = "📖 Speaking the sentence context. Type the word here…";
-      inputEl.focus();
-      
-      const utt = createUtterance(item.sentence);
-      // Removed: utt.onend handler which previously focused the input.
       
       speechSynthesis.speak(utt);
     }
@@ -670,8 +698,8 @@
       messageEl.textContent = `🎉 You scored ${score} out of ${spellingList.length}!`;
       updateScoreAndProgress();
       displayResults();
-      // hide sentence/submit while on results
-      speakSentenceButtonEl.style.display = 'none';
+      // hide buttons while on results
+      sayAgainButtonEl.style.display = 'none';
       submitButtonEl.style.display = 'none';
       continueButtonEl.style.display = 'none';
       // Hide week selector on results (user requested Menu/Home instead of selector on results)
@@ -687,7 +715,7 @@
       // hide week selector once the test starts
       weekBarEl.style.display = 'none';
       // restore UI
-      speakSentenceButtonEl.style.display = 'inline-block';
+      sayAgainButtonEl.style.display = 'inline-block';
       submitButtonEl.style.display = 'inline-block';
       continueButtonEl.style.display = 'none';
       startScreenEl.style.display = 'none';
@@ -726,14 +754,14 @@
     // Event wiring
     // ======================
     startButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); startTest(); });
-    // Speak word button logic is now a wrapper for the core speakWord function
-    speakWordButtonEl.addEventListener('click', ()=> {
+    
+    // Say Again button now calls speakWord, which handles the auto-sentence toggle
+    sayAgainButtonEl.addEventListener('click', ()=> {
       if (soundEnabled) ensureAudioContext();
       if (testInterfaceEl.style.display === 'none') { startTest(); return; }
-      // This button always re-speaks the word (with the new auto-sentence logic if toggled)
       speakWord(); 
     });
-    speakSentenceButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); speakSentence(); });
+    
     submitButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); checkSpelling(); });
     continueButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); nextStep(); inputEl.focus(); });
     startAgainButtonEl.addEventListener('click', resetAndStartImmediate);
