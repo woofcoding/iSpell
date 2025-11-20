@@ -613,6 +613,9 @@
     function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 
     function checkSpelling() {
+      // NEW: Cancel any ongoing speech when the user submits their answer
+      speechSynthesis.cancel(); 
+
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       const typed = inputEl.value.trim();
       const correct = spellingList[currentWordIndex].word;
