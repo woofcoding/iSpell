@@ -67,7 +67,7 @@
         <input id="showSentenceToggle" type="checkbox" /> <span id="showSentenceLabel">Show sentence</span>
       </label>
       <label class="toggle-row" for="autoSpeakSentenceToggle">
-        <input id="autoSpeakSentenceToggle" type="checkbox" /> <span id="autoSpeakSentenceLabel">Speak word then sentence</span>
+        <input id="autoSpeakSentenceToggle" type="checkbox" /> <span id="autoSpeakSentenceLabel">Speak sentence</span>
       </label>
     </div>
 
@@ -253,7 +253,7 @@
     
     let soundEnabled = localStorage.getItem(SOUND_KEY) === null ? true : localStorage.getItem(SOUND_KEY) === 'true';
     let showSentenceEnabled = localStorage.getItem(SHOW_SENTENCE_KEY) === null ? true : localStorage.getItem(SHOW_SENTENCE_KEY) === 'true';
-    let autoSpeakSentenceEnabled = localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === null ? false : localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === 'true'; // NEW STATE, default to false
+    let autoSpeakSentenceEnabled = localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === null ? true : localStorage.getItem(AUTO_SPEAK_SENTENCE_KEY) === 'true'; // NEW STATE, default to TRUE
     
     soundToggleEl.checked = soundEnabled;
     showSentenceToggleEl.checked = showSentenceEnabled;
@@ -652,3 +652,4 @@
   </script>
 </body>
 </html>
+
