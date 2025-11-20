@@ -548,14 +548,15 @@
       ctx.style.display = 'block';
     }
     
-    // UPDATED: Removed the line that hides context display
+    // UPDATED: Focuses input and updates message immediately to allow typing during speech
     function speakWordAndSentence() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       const word = spellingList[currentWordIndex].word;
       const sentence = spellingList[currentWordIndex].sentence;
       
-      messageEl.textContent = "🔊 Speaking the word, then the sentence...";
-      // Removed: document.getElementById('contextDisplay').style.display = 'none';
+      // Set message and focus immediately
+      messageEl.textContent = "🔊 Speaking the word, then the sentence. Type the word here…"; 
+      inputEl.focus();
 
       const wordUtt = createUtterance(word);
       const sentenceUtt = createUtterance(sentence);
@@ -565,16 +566,12 @@
         speechSynthesis.speak(sentenceUtt);
       };
       
-      // Once the full sequence is done, focus the input
-      sentenceUtt.onend = () => {
-         messageEl.textContent = "Type the word here…"; 
-         inputEl.focus();
-      };
+      // Removed: sentenceUtt.onend handler which previously focused the input.
 
       speechSynthesis.speak(wordUtt);
     }
 
-    // UPDATED: Removed the line that hides context display
+    // UPDATED: Focuses input and updates message immediately to allow typing during speech
     function speakWord() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       
@@ -585,17 +582,17 @@
       
       const word = spellingList[currentWordIndex].word;
       const utt = createUtterance(word);
-      messageEl.textContent = "🔊 Speaking the word...";
-      // Removed: document.getElementById('contextDisplay').style.display = 'none';
+
+      // Set message and focus immediately
+      messageEl.textContent = "🔊 Speaking the word. Type the word here…";
+      inputEl.focus();
       
-      utt.onend = () => {
-         messageEl.textContent = "Type the word here…";
-         inputEl.focus();
-      };
+      // Removed: utt.onend handler which previously focused the input.
 
       speechSynthesis.speak(utt);
     }
 
+    // UPDATED: Focuses input and updates message immediately to allow typing during speech
     function speakSentence() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       const item = spellingList[currentWordIndex];
@@ -603,16 +600,14 @@
       // Always display the blanked sentence immediately when this button is pressed
       displayBlankedSentence(currentWordIndex);
       
-      messageEl.textContent = "📖 Speaking the sentence context...";
+      // Set message and focus immediately
+      messageEl.textContent = "📖 Speaking the sentence context. Type the word here…";
+      inputEl.focus();
       
       const utt = createUtterance(item.sentence);
-      utt.onend = () => {
-         messageEl.textContent = "Type the word here…";
-         inputEl.focus();
-      };
+      // Removed: utt.onend handler which previously focused the input.
       
       speechSynthesis.speak(utt);
-      inputEl.focus();
     }
 
     function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
