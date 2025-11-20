@@ -588,7 +588,7 @@
       ctx.style.display = 'block';
     }
     
-    // UPDATED: Focuses input and updates message immediately to allow typing during speech
+    // FIX APPLIED HERE: Removed unreliable check in wordUtt.onend
     function speakWordAndSentence() {
       if (!spellingList || currentWordIndex >= spellingList.length) return;
       const word = spellingList[currentWordIndex].word;
@@ -603,10 +603,9 @@
 
       // Chain the sentence to the word's end
       wordUtt.onend = () => {
-        // Only speak sentence if speech is not canceled (i.e. user hasn't submitted yet)
-        if (speechSynthesis.speaking || speechSynthesis.pending) {
-            speechSynthesis.speak(sentenceUtt);
-        }
+        // FIX: Removed conditional check. If the word finishes naturally, play the sentence.
+        // If the user cancelled speech (by pressing Submit or Say Again), wordUtt.onend will not fire.
+        speechSynthesis.speak(sentenceUtt);
       };
 
       speechSynthesis.speak(wordUtt);
