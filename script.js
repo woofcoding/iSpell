@@ -125,6 +125,7 @@ const scoreEl = document.getElementById('score');
 const progressBarContainerEl = document.getElementById('progressBarContainer');
 const inputEl = document.getElementById('wordInput');
 const messageEl = document.getElementById('message');
+const contextDisplayEl = document.getElementById('contextDisplay'); // Added this ref for clarity
 // Renamed button references
 const sayAgainButtonEl = document.getElementById('sayAgainButton');
 const submitButtonEl = document.getElementById('submitButton');
@@ -382,6 +383,12 @@ function populateWeekSelect() {
         option.textContent = week.label;
         weekSelectEl.appendChild(option);
     });
+    
+    // NEW: Set the selected option to the ID of the last week (latest)
+    if (weeksData.length > 0) {
+        weekSelectEl.value = weeksData[weeksData.length - 1].id;
+    }
+
     updateWeekInfo(); // Call initially to set info for default selected week
 }
 
@@ -395,10 +402,6 @@ function updateWeekInfo() {
     // After changing week, re-check practice needed
     checkPracticeTestNeeded(currentStudentName, currentWeek?.id);
 }
-
-// In script.js, find the existing 'speak' function and replace it with this:
-
-// In script.js, find the existing 'speak' function and replace it with this:
 
 function speak(text, rate = 1.0) {
     if (!soundEnabled || !('speechSynthesis' in window)) {
@@ -446,6 +449,7 @@ function speak(text, rate = 1.0) {
         setVoice();
     }
 }
+
 function startTest(isPractice = false) {
     const studentName = studentNameInputEl.value.trim();
     if (!studentName) {
@@ -458,21 +462,15 @@ function startTest(isPractice = false) {
     saveKnownStudent(currentStudentName); // Save the student name
     loadStudentHistory(currentStudentName); // Load their history
 
-    spellingList = isPractice ? practiceWords.map(word => ({word: word, sentence: null})) : currentWeek.words;
-    
     // If it's a practice test, we need to ensure sentences are included from the main data
     if (isPractice) {
         spellingList = practiceWords.map(wordText => {
             const originalWord = currentWeek.words.find(w => w.word === wordText);
-            return originalWord || { word: wordText, sentence: null }; // Fallback if not found (shouldn't happen)
+            return originalWord || { word: wordText, sentence: null }; // Fallback if not found
         });
+        spellingList.sort(() => Math.random() - 0.5); // Shuffle practice words
     } else {
         spellingList = currentWeek.words;
-    }
-
-    // Shuffle words for practice tests or if a setting for regular tests existed
-    if (isPractice) {
-         spellingList.sort(() => Math.random() - 0.5);
     }
 
     currentWordIndex = 0;
@@ -485,7 +483,7 @@ function startTest(isPractice = false) {
     weekBarEl.ariaHidden = "true"; // Hide week selection
     weekBarEl.style.display = 'none'; // Visually hide
 
-    inputEl.value = '';
+    inputEl.value = ''; // Ensure input is clear on test start
     inputEl.focus();
     messageEl.textContent = '';
     continueButtonEl.style.display = 'none';
@@ -495,11 +493,49 @@ function startTest(isPractice = false) {
     nextWord();
 }
 
+function nextWord() {
+    inputEl.value = ''; // Clear input for the NEXT word
+    inputEl.focus();
+    messageEl.textContent = '';
+    continueButtonEl.style.display = 'none';
+    submitButtonEl.style.display = 'inline-block'; // Enable submit button
+
+    contextDisplayEl.textContent = ''; // Always reset contextDisplay
+    contextDisplayEl.style.display = 'none'; // Hide by default
+
+    if (currentWordIndex < spellingList.length) {
+        const currentWordObj = spellingList[currentWordIndex];
+        progressEl.textContent = `Word ${currentWordIndex + 1} of ${spellingList.length}`;
+        
+        if (autoSpeakSentenceEnabled && currentWordObj.sentence) { // Only speak sentence if available
+            speak(currentWordObj.word, 0.8); // Speak word first, slightly slower
+            setTimeout(() => {
+                speak(currentWordObj.sentence); // Then speak sentence
+                if (showSentenceEnabled) { // Only show sentence if setting is ON
+                     contextDisplayEl.textContent = currentWordObj.sentence;
+                     contextDisplayEl.style.display = 'block'; // Make visible
+                }
+            }, 1500); // Delay sentence slightly
+        } else {
+            // Either auto-speak sentence is OFF, or no sentence is available
+            speak(currentWordObj.word); // Just speak the word
+            if (showSentenceEnabled && currentWordObj.sentence) { // Only show sentence if setting is ON and sentence available
+                contextDisplayEl.textContent = currentWordObj.sentence;
+                contextDisplayEl.style.display = 'block'; // Make visible
+            }
+        }
+    } else {
+        endTest();
+    }
+}
+
 function handleSubmit() {
     const userInput = inputEl.value.trim();
     const correctWord = spellingList[currentWordIndex].word;
     const isCorrect = userInput.toLowerCase() === correctWord.toLowerCase();
-    const wordInfo = spellingList[currentWordIndex];
+    
+    // IMPORTANT: Clear the input field immediately after getting user input for current word
+    inputEl.value = ''; 
 
     updateWordHistory(correctWord, isCorrect); // Update student's history
 
@@ -514,8 +550,7 @@ function handleSubmit() {
         messageEl.textContent = "✅ Correct!";
         messageEl.style.color = 'var(--ok)';
         if (soundEnabled) {
-            // Play a success sound if enabled
-            const audio = new Audio('success.mp3'); // Make sure you have a success.mp3
+            const audio = new Audio('success.mp3'); 
             audio.play();
         }
         woofsImageEl.classList.add('animate-woof'); // Trigger animation
@@ -526,8 +561,7 @@ function handleSubmit() {
         messageEl.innerHTML = `❌ Incorrect. The word was: <strong>${correctWord}</strong>`;
         messageEl.style.color = 'var(--bad)';
         if (soundEnabled) {
-            // Play a failure sound if enabled
-            const audio = new Audio('fail.mp3'); // Make sure you have a fail.mp3
+            const audio = new Audio('fail.mp3'); 
             audio.play();
         }
     }
@@ -537,7 +571,7 @@ function handleSubmit() {
     submitButtonEl.style.display = 'none'; // Hide submit button
     continueButtonEl.style.display = 'block'; // Show continue button
     continueButtonEl.focus(); // Focus continue button
-    speak(correctWord); // Speak the correct word again
+    speak(correctWord); // Speak the correct word again AFTER feedback
 }
 
 function updateProgressBar(lastResult = null) {
@@ -606,7 +640,7 @@ submitButtonEl.addEventListener('click', handleSubmit);
 sayAgainButtonEl.addEventListener('click', () => {
     if (currentWordIndex < spellingList.length) {
         const currentWordObj = spellingList[currentWordIndex];
-        if (autoSpeakSentenceEnabled) {
+        if (autoSpeakSentenceEnabled && currentWordObj.sentence) { // Only speak sentence if available
             speak(currentWordObj.word, 0.8);
             setTimeout(() => speak(currentWordObj.sentence), 1500);
         } else {
@@ -667,6 +701,18 @@ showSentenceToggleEl.addEventListener('change', () => {
     showSentenceEnabled = showSentenceToggleEl.checked;
     localStorage.setItem(SHOW_SENTENCE_KEY, showSentenceEnabled);
     showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence (ON)' : 'Show sentence (OFF)';
+    
+    // Immediately update sentence display if test is active and setting changed
+    if (testInterfaceEl.style.display === 'block' && currentWordIndex < spellingList.length) {
+        const currentWordObj = spellingList[currentWordIndex];
+        if (showSentenceEnabled && currentWordObj.sentence) {
+            contextDisplayEl.textContent = currentWordObj.sentence;
+            contextDisplayEl.style.display = 'block';
+        } else {
+            contextDisplayEl.textContent = '';
+            contextDisplayEl.style.display = 'none';
+        }
+    }
 });
 
 autoSpeakSentenceToggleEl.addEventListener('change', () => {
@@ -675,22 +721,4 @@ autoSpeakSentenceToggleEl.addEventListener('change', () => {
     autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence (ON)' : 'Speak word then sentence (OFF)';
 });
 
-disableSpellcheckToggleEl.addEventListener('change', () => {
-    disableSpellcheckEnabled = disableSpellcheckToggleEl.checked;
-    localStorage.setItem(DISABLE_SPELLCHECK_KEY, disableSpellcheckEnabled);
-    inputEl.spellcheck = !disableSpellcheckEnabled; // Update the spellcheck attribute
-    disableSpellcheckLabelEl.textContent = disableSpellcheckEnabled ? 'Disable browser spellcheck (ON)' : 'Disable browser spellcheck (OFF)';
-});
-
-studentNameInputEl.addEventListener('input', () => {
-    const name = studentNameInputEl.value.trim();
-    if (name) {
-        currentStudentDisplayEl.textContent = `(Currently: ${name})`;
-        loadStudentHistory(name); // Load history as user types/selects
-        checkPracticeTestNeeded(name, weekSelectEl.value);
-    } else {
-        currentStudentDisplayEl.textContent = '';
-        historicalErrors = {}; // Clear history if name is empty
-        hidePracticeTestSection();
-    }
-});
+disableSpellcheckToggleEl.addEventListener('change',
