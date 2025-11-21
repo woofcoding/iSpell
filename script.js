@@ -396,12 +396,86 @@ function updateWeekInfo() {
     checkPracticeTestNeeded(currentStudentName, currentWeek?.id);
 }
 
+// In script.js, find the existing 'speak' function and replace it with this:
+
 function speak(text, rate = 1.0) {
-    if (!soundEnabled || !('speechSynthesis' in window)) return;
+    if (!soundEnabled || !('speechSynthesis' in window)) {
+        console.log("Speech synthesis not enabled or not supported.");
+        return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = rate; // Adjust speech rate if needed
-    utterance.lang = 'en-GB'; // Specify language (e.g., British English)
-    speechSynthesis.speak(utterance);
+    utterance.rate = rate;
+    utterance.lang = 'en-GB'; // Keep the language preference
+
+    // Get available voices and try to select a specific one
+    const voices = speechSynthesis.getVoices();
+    let selectedVoice = null;
+
+    // First, try to find a female British English voice
+    selectedVoice = voices.find(
+        voice => voice.lang === 'en-GB' && voice.name.toLowerCase().includes('female')
+    );
+
+    // If no specific female voice, try to find any British English voice
+    if (!selectedVoice) {
+        selectedVoice = voices.find(
+            voice => voice.lang === 'en-GB'
+        );
+    }
+
+    // If still no British English voice, try any English voice
+    if (!selectedVoice) {
+        selectedVoice = voices.find(
+            voice => voice.lang.startsWith('en-')
+        );
+    }
+    
+    // If a suitable voice is found, assign it
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        console.log("Using voice:", selectedVoice.name);
+    } else {
+        console.warn("No specific 'en-GB' voice found, using default browser voice.");
+    }
+
+    // Event listener to ensure voices are loaded before trying to set
+    // This is important because getVoices() might return an empty array initially
+    speechSynthesis.onvoiceschanged = () => {
+        const updatedVoices = speechSynthesis.getVoices();
+        let newSelectedVoice = null;
+
+        newSelectedVoice = updatedVoices.find(
+            voice => voice.lang === 'en-GB' && voice.name.toLowerCase().includes('female')
+        );
+        if (!newSelectedVoice) {
+            newSelectedVoice = updatedVoices.find(
+                voice => voice.lang === 'en-GB'
+            );
+        }
+        if (!newSelectedVoice) {
+            newSelectedVoice = updatedVoices.find(
+                voice => voice.lang.startsWith('en-')
+            );
+        }
+
+        if (newSelectedVoice && !utterance.voice) { // Only set if not already set by initial load
+            utterance.voice = newSelectedVoice;
+            console.log("Voices loaded, now using voice:", newSelectedVoice.name);
+        }
+        // Only speak if it hasn't been spoken yet.
+        // This 'onvoiceschanged' event can fire multiple times.
+        if (!speechSynthesis.speaking) {
+             speechSynthesis.speak(utterance);
+        }
+    };
+
+    // Initial speak call if voices are already loaded
+    if (voices.length > 0 && !selectedVoice) { // If voices were already there but no specific one found
+        speechSynthesis.speak(utterance);
+    } else if (selectedVoice) { // If a voice was successfully selected initially
+         speechSynthesis.speak(utterance);
+    }
 }
 
 function startTest(isPractice = false) {
