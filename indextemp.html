@@ -349,7 +349,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     // ======================
     // WEEKS DATA (easy to update)
     // ======================
@@ -608,4 +608,437 @@
                 localStorage.setItem(KNOWN_STUDENTS_KEY, JSON.stringify(knownStudents));
                 renderKnownStudentsList(); // Update settings list
                 renderDatalistSuggestions(); // Update main screen suggestions
-            } catch (
+            } catch (e) {
+                console.error("Error saving known students list:", e);
+            }
+        }
+        localStorage.setItem(LAST_NAME_KEY, name); // Save last used name
+    }
+
+    function deleteStudent(nameToDelete) {
+        if (!confirm(`Are you sure you want to delete ${nameToDelete} and all their spelling progress? This cannot be undone.`)) {
+            return;
+        }
+
+        // Remove from knownStudents list
+        knownStudents = knownStudents.filter(name => name !== nameToDelete);
+        try {
+            localStorage.setItem(KNOWN_STUDENTS_KEY, JSON.stringify(knownStudents));
+            // Also delete their individual history
+            localStorage.removeItem(getStorageKey(nameToDelete));
+            console.log(`Deleted student ${nameToDelete} and their history.`);
+
+            // If the deleted student was the currently selected one, clear it
+            if (currentStudentName === nameToDelete) {
+                currentStudentName = '';
+                studentNameInputEl.value = '';
+                currentStudentDisplayEl.textContent = '';
+                localStorage.removeItem(LAST_NAME_KEY);
+                hidePracticeTestSection();
+            }
+        } catch (e) {
+            console.error("Error deleting student:", e);
+        }
+        
+        renderKnownStudentsList();
+        renderDatalistSuggestions();
+    }
+
+    function loadStudentHistory(name) {
+        if (!name) {
+            historicalErrors = {};
+            return;
+        }
+        const key = getStorageKey(name);
+        const storedHistory = localStorage.getItem(key);
+        try {
+            historicalErrors = storedHistory ? JSON.parse(storedHistory) : {};
+            if (typeof historicalErrors !== 'object' || historicalErrors === null) {
+                historicalErrors = {}; // Reset if invalid
+            }
+        } catch (e) {
+            console.error(`Error parsing history for ${name}:`, e);
+            historicalErrors = {}; // Reset if parsing fails
+        }
+        console.log(`Loaded history for ${name}:`, historicalErrors);
+    }
+
+    function saveStudentHistory(name) {
+        if (!name) return;
+        const key = getStorageKey(name);
+        try {
+            localStorage.setItem(key, JSON.stringify(historicalErrors));
+            console.log(`Saved history for ${name}:`, historicalErrors);
+        } catch (e) {
+            console.error(`Error saving history for ${name}:`, e);
+        }
+    }
+
+    function updateWordHistory(word, isCorrect) {
+        const cleanWord = word.toLowerCase();
+        if (!historicalErrors[cleanWord]) {
+            historicalErrors[cleanWord] = { errors: 0, correct: 0 };
+        }
+        if (isCorrect) {
+            historicalErrors[cleanWord].correct++;
+            // If they got it right after previous errors, reduce errors slightly for practice logic
+            if (historicalErrors[cleanWord].errors > 0) {
+                 historicalErrors[cleanWord].errors = Math.max(0, historicalErrors[cleanWord].errors - 0.5); // Reduce "error weight"
+            }
+        } else {
+            historicalErrors[cleanWord].errors++;
+        }
+    }
+
+    // Determine if practice test is needed
+    function checkPracticeTestNeeded(studentName, weekId) {
+        if (!studentName || !weekId) {
+            hidePracticeTestSection();
+            return;
+        }
+
+        const wordsForWeek = weeksData.find(week => week.id === weekId)?.words || [];
+        const wordsWithErrors = wordsForWeek.filter(wordObj => {
+            const history = historicalErrors[wordObj.word.toLowerCase()];
+            // Consider a word for practice if it has more errors than correct attempts for this student
+            return history && history.errors > history.correct;
+        });
+
+        if (wordsWithErrors.length > 0) {
+            showPracticeTestSection(wordsWithErrors.map(w => w.word));
+        } else {
+            hidePracticeTestSection();
+        }
+    }
+
+    let practiceWords = []; // Stores words for the practice test
+    function showPracticeTestSection(words) {
+        practiceWords = words;
+        practiceListInfoEl.textContent = `You have ${words.length} words from this week's list with repeated errors. Click below to practice them!`;
+        practiceTestSectionEl.style.display = 'flex';
+    }
+
+    function hidePracticeTestSection() {
+        practiceTestSectionEl.style.display = 'none';
+        practiceWords = [];
+    }
+
+    // ======================
+    // Core Functions
+    // ======================
+    function populateWeekSelect() {
+        weekSelectEl.innerHTML = '';
+        weeksData.forEach(week => {
+            const option = document.createElement('option');
+            option.value = week.id;
+            option.textContent = week.label;
+            weekSelectEl.appendChild(option);
+        });
+        updateWeekInfo(); // Call initially to set info for default selected week
+    }
+
+    function updateWeekInfo() {
+        const selectedId = weekSelectEl.value;
+        currentWeek = weeksData.find(week => week.id === selectedId);
+        if (currentWeek) {
+            // For now, weekInfo is empty, but could be used to display details:
+            // weekInfoEl.textContent = `Words: ${currentWeek.words.length}`;
+        }
+        // After changing week, re-check practice needed
+        checkPracticeTestNeeded(currentStudentName, currentWeek?.id);
+    }
+
+    function speak(text, rate = 1.0) {
+        if (!soundEnabled || !('speechSynthesis' in window)) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = rate; // Adjust speech rate if needed
+        utterance.lang = 'en-GB'; // Specify language (e.g., British English)
+        speechSynthesis.speak(utterance);
+    }
+
+    function startTest(isPractice = false) {
+        const studentName = studentNameInputEl.value.trim();
+        if (!studentName) {
+            messageEl.textContent = "Please enter your name to start!";
+            messageEl.style.color = 'var(--bad)';
+            inputEl.focus();
+            return;
+        }
+        currentStudentName = studentName;
+        saveKnownStudent(currentStudentName); // Save the student name
+        loadStudentHistory(currentStudentName); // Load their history
+
+        spellingList = isPractice ? practiceWords.map(word => ({word: word, sentence: null})) : currentWeek.words;
+        
+        // If it's a practice test, we need to ensure sentences are included from the main data
+        if (isPractice) {
+            spellingList = practiceWords.map(wordText => {
+                const originalWord = currentWeek.words.find(w => w.word === wordText);
+                return originalWord || { word: wordText, sentence: null }; // Fallback if not found (shouldn't happen)
+            });
+        } else {
+            spellingList = currentWeek.words;
+        }
+
+        // Shuffle words for practice tests or if a setting for regular tests existed
+        if (isPractice) {
+             spellingList.sort(() => Math.random() - 0.5);
+        }
+
+        currentWordIndex = 0;
+        score = 0;
+        resultsLog = [];
+        
+        startScreenEl.style.display = 'none';
+        testInterfaceEl.style.display = 'block';
+        resultsEl.style.display = 'none';
+        weekBarEl.ariaHidden = "true"; // Hide week selection
+        weekBarEl.style.display = 'none'; // Visually hide
+
+        inputEl.value = '';
+        inputEl.focus();
+        messageEl.textContent = '';
+        continueButtonEl.style.display = 'none';
+        submitButtonEl.style.display = 'inline-block'; // Ensure submit button is visible
+
+        updateProgressBar();
+        nextWord();
+    }
+
+    function nextWord() {
+        inputEl.value = '';
+        inputEl.focus();
+        messageEl.textContent = '';
+        continueButtonEl.style.display = 'none';
+        submitButtonEl.style.display = 'inline-block'; // Enable submit button
+
+        if (currentWordIndex < spellingList.length) {
+            const currentWordObj = spellingList[currentWordIndex];
+            progressEl.textContent = `Word ${currentWordIndex + 1} of ${spellingList.length}`;
+            
+            // Clear contextDisplay and only show if showSentenceEnabled
+            document.getElementById('contextDisplay').textContent = '';
+            document.getElementById('contextDisplay').style.display = 'none';
+
+            if (autoSpeakSentenceEnabled) {
+                speak(currentWordObj.word, 0.8); // Speak word first, slightly slower
+                setTimeout(() => {
+                    speak(currentWordObj.sentence); // Then speak sentence
+                    if (showSentenceEnabled && currentWordObj.sentence) {
+                         document.getElementById('contextDisplay').textContent = currentWordObj.sentence;
+                         document.getElementById('contextDisplay').style.display = 'block';
+                    }
+                }, 1500); // Delay sentence slightly
+            } else {
+                speak(currentWordObj.word); // Just speak the word
+                if (showSentenceEnabled && currentWordObj.sentence) {
+                    document.getElementById('contextDisplay').textContent = currentWordObj.sentence;
+                    document.getElementById('contextDisplay').style.display = 'block';
+                }
+            }
+        } else {
+            endTest();
+        }
+    }
+
+    function handleSubmit() {
+        const userInput = inputEl.value.trim();
+        const correctWord = spellingList[currentWordIndex].word;
+        const isCorrect = userInput.toLowerCase() === correctWord.toLowerCase();
+        const wordInfo = spellingList[currentWordIndex];
+
+        updateWordHistory(correctWord, isCorrect); // Update student's history
+
+        resultsLog.push({
+            attempt: userInput,
+            correct: correctWord,
+            isCorrect: isCorrect
+        });
+
+        if (isCorrect) {
+            score++;
+            messageEl.textContent = "✅ Correct!";
+            messageEl.style.color = 'var(--ok)';
+            if (soundEnabled) {
+                // Play a success sound if enabled
+                const audio = new Audio('success.mp3'); // Make sure you have a success.mp3
+                audio.play();
+            }
+            woofsImageEl.classList.add('animate-woof'); // Trigger animation
+            setTimeout(() => {
+                woofsImageEl.classList.remove('animate-woof');
+            }, 1200);
+        } else {
+            messageEl.innerHTML = `❌ Incorrect. The word was: <strong>${correctWord}</strong>`;
+            messageEl.style.color = 'var(--bad)';
+            if (soundEnabled) {
+                // Play a failure sound if enabled
+                const audio = new Audio('fail.mp3'); // Make sure you have a fail.mp3
+                audio.play();
+            }
+        }
+        scoreEl.textContent = `Score: ${score} / ${currentWordIndex + 1}`;
+        updateProgressBar(isCorrect);
+
+        submitButtonEl.style.display = 'none'; // Hide submit button
+        continueButtonEl.style.display = 'block'; // Show continue button
+        continueButtonEl.focus(); // Focus continue button
+        speak(correctWord); // Speak the correct word again
+    }
+
+    function updateProgressBar(lastResult = null) {
+        progressBarContainerEl.innerHTML = ''; // Clear existing segments
+        for (let i = 0; i < spellingList.length; i++) {
+            const segment = document.createElement('div');
+            segment.className = 'progressSegment';
+            if (i < currentWordIndex) {
+                // Apply result for past words
+                segment.classList.add(resultsLog[i].isCorrect ? 'correct' : 'incorrect');
+            } else if (i === currentWordIndex && lastResult !== null) {
+                // Apply result for the current word if already submitted
+                segment.classList.add(lastResult ? 'correct' : 'incorrect');
+            }
+            progressBarContainerEl.appendChild(segment);
+        }
+    }
+
+    function endTest() {
+        testInterfaceEl.style.display = 'none';
+        resultsEl.style.display = 'block';
+        weekBarEl.ariaHidden = "false"; // Show week selection
+        weekBarEl.style.display = 'flex'; // Visually show
+
+        finalScoreDisplayEl.textContent = `Final Score: ${score} / ${spellingList.length}`;
+        finalScoreDisplayEl.style.color = score / spellingList.length > 0.7 ? 'var(--ok)' : 'var(--bad)'; // Green for good score, red for low
+
+        resultsTableBodyEl.innerHTML = '';
+        resultsLog.forEach((log, index) => {
+            const row = resultsTableBodyEl.insertRow();
+            row.className = log.isCorrect ? 'correct' : 'incorrect';
+            row.insertCell().textContent = index + 1;
+            row.insertCell().textContent = log.attempt || 'No attempt';
+            row.insertCell().textContent = log.correct;
+            row.insertCell().textContent = log.isCorrect ? 'Correct' : 'Incorrect';
+        });
+
+        // Save history for the current student
+        saveStudentHistory(currentStudentName);
+        // After test, re-check if practice is needed based on updated history
+        checkPracticeTestNeeded(currentStudentName, currentWeek?.id);
+    }
+
+    // ======================
+    // Event Listeners
+    // ======================
+    window.addEventListener('load', () => {
+        populateWeekSelect();
+        loadKnownStudents();
+        const lastUsedName = localStorage.getItem(LAST_NAME_KEY);
+        if (lastUsedName) {
+            studentNameInputEl.value = lastUsedName;
+            currentStudentName = lastUsedName;
+            currentStudentDisplayEl.textContent = `(Currently: ${lastUsedName})`;
+            loadStudentHistory(lastUsedName);
+            checkPracticeTestNeeded(lastUsedName, weekSelectEl.value);
+        }
+    });
+
+    weekSelectEl.addEventListener('change', updateWeekInfo);
+
+    startButtonEl.addEventListener('click', () => startTest(false));
+    practiceButtonEl.addEventListener('click', () => startTest(true));
+
+    submitButtonEl.addEventListener('click', handleSubmit);
+    sayAgainButtonEl.addEventListener('click', () => {
+        if (currentWordIndex < spellingList.length) {
+            const currentWordObj = spellingList[currentWordIndex];
+            if (autoSpeakSentenceEnabled) {
+                speak(currentWordObj.word, 0.8);
+                setTimeout(() => speak(currentWordObj.sentence), 1500);
+            } else {
+                speak(currentWordObj.word);
+            }
+        }
+    });
+
+    continueButtonEl.addEventListener('click', () => {
+        currentWordIndex++;
+        nextWord();
+    });
+
+    menuButtonEl.addEventListener('click', () => {
+        resultsEl.style.display = 'none';
+        startScreenEl.style.display = 'flex';
+        // Ensure student name and practice section are correctly displayed/hidden
+        if (currentStudentName) {
+            currentStudentDisplayEl.textContent = `(Currently: ${currentStudentName})`;
+            checkPracticeTestNeeded(currentStudentName, weekSelectEl.value);
+        } else {
+            currentStudentDisplayEl.textContent = '';
+            hidePracticeTestSection();
+        }
+        inputEl.value = studentNameInputEl.value; // Keep name in input
+    });
+
+    inputEl.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent default form submission behavior
+            if (submitButtonEl.style.display !== 'none') { // Only submit if visible
+                handleSubmit();
+            } else if (continueButtonEl.style.display !== 'none') { // Only continue if visible
+                continueButtonEl.click();
+            }
+        }
+    });
+
+    // Settings Panel Event Listeners
+    settingsIconEl.addEventListener('click', () => {
+        settingsPanelEl.style.display = 'flex';
+        settingsPanelEl.setAttribute('aria-hidden', 'false');
+        settingsPanelEl.focus(); // Focus the panel for accessibility
+    });
+
+    closeSettingsButtonEl.addEventListener('click', () => {
+        settingsPanelEl.style.display = 'none';
+        settingsPanelEl.setAttribute('aria-hidden', 'true');
+    });
+
+    soundToggleEl.addEventListener('change', () => {
+        soundEnabled = soundToggleEl.checked;
+        localStorage.setItem(SOUND_KEY, soundEnabled);
+        soundLabelEl.textContent = soundEnabled ? 'Sound effects (ON)' : 'Sound effects (OFF)';
+    });
+
+    showSentenceToggleEl.addEventListener('change', () => {
+        showSentenceEnabled = showSentenceToggleEl.checked;
+        localStorage.setItem(SHOW_SENTENCE_KEY, showSentenceEnabled);
+        showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence (ON)' : 'Show sentence (OFF)';
+    });
+
+    autoSpeakSentenceToggleEl.addEventListener('change', () => {
+        autoSpeakSentenceEnabled = autoSpeakSentenceToggleEl.checked;
+        localStorage.setItem(AUTO_SPEAK_SENTENCE_KEY, autoSpeakSentenceEnabled);
+        autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence (ON)' : 'Speak word then sentence (OFF)';
+    });
+
+    disableSpellcheckToggleEl.addEventListener('change', () => {
+        disableSpellcheckEnabled = disableSpellcheckToggleEl.checked;
+        localStorage.setItem(DISABLE_SPELLCHECK_KEY, disableSpellcheckEnabled);
+        inputEl.spellcheck = !disableSpellcheckEnabled; // Update the spellcheck attribute
+        disableSpellcheckLabelEl.textContent = disableSpellcheckEnabled ? 'Disable browser spellcheck (ON)' : 'Disable browser spellcheck (OFF)';
+    });
+
+    studentNameInputEl.addEventListener('input', () => {
+        const name = studentNameInputEl.value.trim();
+        if (name) {
+            currentStudentDisplayEl.textContent = `(Currently: ${name})`;
+            loadStudentHistory(name); // Load history as user types/selects
+            checkPracticeTestNeeded(name, weekSelectEl.value);
+        } else {
+            currentStudentDisplayEl.textContent = '';
+            historicalErrors = {}; // Clear history if name is empty
+            hidePracticeTestSection();
+        }
+    });
+
+</
