@@ -93,8 +93,36 @@
     
     /* Name and Practice Styles */
     #nameInputContainer{display:flex;flex-direction:column;gap:5px;align-items:center;width:80%;max-width:300px;margin-bottom:10px;}
+    
+    /* NEW: Wrapper for Datalist input to hold a visual indicator */
+    #nameInputWrapper {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center; 
+    }
+    
     /* Updated name input styling for datalist */
-    #studentNameInput{padding:8px 10px;border-radius:6px;border:1px solid #ccc;width:100%;text-align:center;}
+    #studentNameInput{
+        padding:8px 10px;
+        border-radius:6px;
+        border:1px solid #ccc;
+        width:100%;
+        text-align:center;
+        /* Make space for the icon */
+        padding-right: 30px; 
+    }
+    
+    /* NEW: Visual indicator for the Datalist */
+    #nameInputWrapper::after {
+        content: '▼'; 
+        position: absolute;
+        right: 10px;
+        color: #999;
+        font-size: 0.75rem;
+        pointer-events: none; /* Allows click-through to the input */
+    }
+
     /* Fix: Removed default content from HTML, now set by JS */
     #currentStudentDisplay{font-weight:700;color:var(--accent);margin:0;min-height:20px;} 
     #practiceTestSection{
@@ -231,8 +259,10 @@
     <div id="startScreen" role="region" aria-label="Start screen">
         <div id="nameInputContainer">
             <label for="studentNameInput">Enter UserName to Save Progress:</label>
-            <input id="studentNameInput" list="knownStudentsList" type="text" placeholder="e.g., John Doe" autocomplete="name" />
-            <datalist id="knownStudentsList"></datalist> <p id="currentStudentDisplay"></p>
+            <div id="nameInputWrapper"> 
+                <input id="studentNameInput" list="knownStudentsList" type="text" placeholder="e.g., John Doe" autocomplete="name" />
+                <datalist id="knownStudentsList"></datalist> </div>
+            <p id="currentStudentDisplay"></p>
         </div>
         
       <p id="startBlurb">Press Start to begin the spelling test for the selected week.</p>
@@ -502,15 +532,16 @@
     
     function populateKnownStudentsList() {
         knownStudentsListEl.innerHTML = '';
-        // Only populate the datalist if there is more than one known student 
-        // (to keep the interface clean when only one user is stored)
+        
+        // Always populate the datalist with all known names (even if only one is present)
+        knownStudents.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            knownStudentsListEl.appendChild(option);
+        });
+        
+        // Always ensure the datalist attribute is set if we have names to suggest
         if (knownStudents.length > 0) { 
-            knownStudents.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                knownStudentsListEl.appendChild(option);
-            });
-            // The datalist attribute on the input handles the display as a dropdown
             studentNameInputEl.setAttribute('list', 'knownStudentsList');
         } else {
             studentNameInputEl.removeAttribute('list');
