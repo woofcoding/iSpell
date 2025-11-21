@@ -11,16 +11,18 @@
     h1{color:var(--accent);margin:0 0 10px; text-align: center;}
     
     /* corner image */
-    .corner-woofs{position:absolute;top:12px;right:12px;width:64px;height:auto;pointer-events:none; transition: transform 0.15s;} /* Added transition for smooth reset */
+    .corner-woofs{position:absolute;top:12px;right:12px;width:64px;height:auto;pointer-events:none; transition: transform 0.15s;}
 
-    /* NEW ANIMATION STYLES */
-    @keyframes woofPulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1) rotate(-3deg); }
-        100% { transform: scale(1); }
+    /* NEW CARTOON-STYLE ANIMATION */
+    @keyframes woofExcitedJump {
+        0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+        25% { transform: translate(0, -10px) scale(1.1) rotate(5deg); } /* Jump Up and Rotate */
+        50% { transform: translate(0, 0) scale(1.05) rotate(-5deg); } /* Settle with small bounce */
+        75% { transform: translate(0, -5px) scale(1.08) rotate(3deg); } /* Second, smaller jump */
+        100% { transform: translate(0, 0) scale(1) rotate(0deg); } /* Return to rest */
     }
     .corner-woofs.animate-woof {
-        animation: woofPulse 1.5s ease-in-out 2; /* Bounces twice */
+        animation: woofExcitedJump 1.2s ease-out 2; /* Jumps twice for a lively effect */
     }
     
     /* Settings Icon */
@@ -371,7 +373,7 @@
     const settingsPanelEl = document.getElementById('settingsPanel');
     const closeSettingsButtonEl = document.getElementById('closeSettingsButton');
     
-    // Woofs Image Ref (NEW)
+    // Woofs Image Ref
     const woofsImageEl = document.querySelector('.corner-woofs');
 
     // toggles
