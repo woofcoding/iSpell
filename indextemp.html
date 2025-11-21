@@ -91,8 +91,9 @@
     #startScreen{display:flex;flex-direction:column;gap:14px;align-items:center;padding:18px}
     .primary-action{padding:12px 20px;border-radius:10px;border:none;cursor:pointer;background:var(--ok);color:#fff;font-size:1.05rem}
     
-    /* NEW: Name and Practice Styles */
+    /* Name and Practice Styles */
     #nameInputContainer{display:flex;flex-direction:column;gap:5px;align-items:center;width:80%;max-width:300px;margin-bottom:10px;}
+    /* Updated name input styling for datalist */
     #studentNameInput{padding:8px 10px;border-radius:6px;border:1px solid #ccc;width:100%;text-align:center;}
     #currentStudentDisplay{font-weight:700;color:var(--accent);margin:0;min-height:20px;}
     #practiceTestSection{
@@ -228,9 +229,9 @@
 
     <div id="startScreen" role="region" aria-label="Start screen">
         <div id="nameInputContainer">
-            <label for="studentNameInput">Enter Your Name/ID to Save Progress:</label>
-            <input id="studentNameInput" type="text" placeholder="e.g., John Doe" autocomplete="name" />
-            <p id="currentStudentDisplay">Name not set.</p>
+            <label for="studentNameInput">Choose or Enter Your Name/ID to Save Progress:</label>
+            <input id="studentNameInput" list="knownStudentsList" type="text" placeholder="e.g., John Doe" autocomplete="name" />
+            <datalist id="knownStudentsList"></datalist> <p id="currentStudentDisplay">Name not set.</p>
         </div>
         
       <p id="startBlurb">Press Start to begin the spelling test for the selected week.</p>
@@ -377,11 +378,14 @@
     let score = 0;
     let resultsLog = [];
     
-    // NEW: Student and Error Tracking
+    // Student and Error Tracking
     let currentStudentName = '';
-    // This will hold the persistent error history for the current student
     // Format: { "word1": {errors: 2, correct: 5}, "word2": {errors: 0, correct: 1}, ... }
     let historicalErrors = {}; 
+    
+    // NEW: Known Students List
+    const KNOWN_STUDENTS_KEY = 'spellingKnownStudents'; 
+    let knownStudents = [];
 
     const weekSelectEl = document.getElementById('weekSelect');
     const weekLabelEl = document.getElementById('weekLabel');
@@ -391,8 +395,11 @@
     const startScreenEl = document.getElementById('startScreen');
     const startButtonEl = document.getElementById('startButton');
     
-    // NEW: Name and Practice Refs
+    // Name and Practice Refs
     const studentNameInputEl = document.getElementById('studentNameInput');
+    // NEW DATALIST REF
+    const knownStudentsListEl = document.getElementById('knownStudentsList');
+    
     const currentStudentDisplayEl = document.getElementById('currentStudentDisplay');
     const practiceTestSectionEl = document.getElementById('practiceTestSection');
     const practiceListInfoEl = document.getElementById('practiceListInfo');
@@ -413,7 +420,6 @@
     const resultsEl = document.getElementById('results');
     const finalScoreDisplayEl = document.getElementById('finalScoreDisplay'); 
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
-    // Removed startAgainButtonEl reference
     const menuButtonEl = document.getElementById('menuButton');
 
     // Settings Panel Refs
@@ -447,7 +453,6 @@
         studentNameInputEl.value = lastUsedName;
     }
 
-
     // Apply initial state to toggles
     soundToggleEl.checked = soundEnabled;
     showSentenceToggleEl.checked = showSentenceEnabled;
@@ -475,6 +480,54 @@
     // Key for localStorage specific to a student's spelling history
     const getStorageKey = (name) => `spelling_history_${name.trim().toLowerCase().replace(/\s+/g, '_')}`;
 
+    function loadKnownStudents() {
+        const storedList = localStorage.getItem(KNOWN_STUDENTS_KEY);
+        try {
+            knownStudents = storedList ? JSON.parse(storedList) : [];
+            // Ensure it's an array and only contains unique strings
+            if (!Array.isArray(knownStudents)) knownStudents = [];
+            knownStudents = [...new Set(knownStudents.filter(n => typeof n === 'string' && n.trim()))];
+        } catch (e) {
+            console.error("Error parsing known students list:", e);
+            knownStudents = [];
+        }
+        
+        populateKnownStudentsList();
+    }
+    
+    function populateKnownStudentsList() {
+        knownStudentsListEl.innerHTML = '';
+        // Only populate the datalist if there is more than one known student 
+        // (to keep the interface clean when only one user is stored)
+        if (knownStudents.length > 0) { 
+            knownStudents.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                knownStudentsListEl.appendChild(option);
+            });
+            // The datalist attribute on the input handles the display as a dropdown
+            studentNameInputEl.setAttribute('list', 'knownStudentsList');
+        } else {
+            studentNameInputEl.removeAttribute('list');
+        }
+    }
+
+    function saveKnownStudent(name) {
+        name = name.trim();
+        if (!name) return;
+        
+        if (!knownStudents.includes(name)) {
+            knownStudents.push(name);
+            knownStudents.sort(); // Keep the list sorted
+            try {
+                localStorage.setItem(KNOWN_STUDENTS_KEY, JSON.stringify(knownStudents));
+                populateKnownStudentsList(); // Re-populate the datalist
+            } catch (e) {
+                console.error("Error saving known students list:", e);
+            }
+        }
+    }
+    
     function loadHistoricalErrors(name) {
         if (!name) {
             historicalErrors = {};
@@ -495,7 +548,9 @@
             historicalErrors = {};
         }
         
+        // FIX: Update display text
         currentStudentDisplayEl.textContent = `Progress saved for: ${name}`;
+        
         updatePracticeListVisibility();
     }
     
@@ -512,7 +567,17 @@
     // Called when week changes or name changes
     function checkNameAndLoad() {
         const name = studentNameInputEl.value.trim();
-        loadHistoricalErrors(name);
+        
+        if (name) {
+            loadHistoricalErrors(name); // Load/set the name and update display
+            saveKnownStudent(name); // Ensure the name is added to the known users list
+        } else {
+            // Handle "Name not set" state
+            historicalErrors = {};
+            currentStudentName = '';
+            currentStudentDisplayEl.textContent = 'Name not set.';
+            practiceTestSectionEl.style.display = 'none';
+        }
         
         // Ensure the main test button is disabled if no name is present
         startButtonEl.disabled = !name;
@@ -526,10 +591,7 @@
         if (!isCorrect) {
             historicalErrors[key].errors = (historicalErrors[key].errors || 0) + 1;
         } else {
-            // Only count a correction if they had previously made an error on it
             historicalErrors[key].correct = (historicalErrors[key].correct || 0) + 1;
-            // Optionally, we could reset the error count here if they got it right after a mistake,
-            // but keeping a tally of ALL errors gives better long-term data.
         }
     }
     
@@ -640,7 +702,10 @@
     
     // Name input listener
     studentNameInputEl.addEventListener('input', checkNameAndLoad);
-    
+    studentNameInputEl.addEventListener('change', checkNameAndLoad); // Also check on change (important for datalist selection)
+    studentNameInputEl.addEventListener('blur', checkNameAndLoad); // Also check on blur
+
+
     // ======================
     // Settings Panel Logic
     // ======================
@@ -946,13 +1011,15 @@
     // start/reset helpers
     // Updated to accept a flag for a practice test
     function startTest(isPractice = false) {
-      if (!currentStudentName) {
+      const name = studentNameInputEl.value.trim();
+      if (!name) {
         alert("Please enter your name/ID before starting the test.");
         studentNameInputEl.focus();
         return;
       }
       
-      if (soundEnabled) ensureAudioContext();
+      // Ensure the current name is loaded and saved before starting
+      checkNameAndLoad(); 
       
       // If not a practice test, ensure the spelling list is the full list for the selected week
       if (!isPractice) {
@@ -1011,8 +1078,6 @@
       checkNameAndLoad();
     }
 
-    // Removed resetAndStartImmediate as it's no longer used
-
     // ======================
     // Event wiring
     // ======================
@@ -1028,7 +1093,6 @@
     
     submitButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); checkSpelling(); });
     continueButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); nextStep(); inputEl.focus(); });
-    // Removed startAgainButtonEl listener
     menuButtonEl.addEventListener('click', resetToStartScreen);
 
     document.addEventListener('keydown', (e) => {
@@ -1043,8 +1107,10 @@
     // ======================
     // Initialization
     // ======================
+    loadKnownStudents(); // NEW: Load the list of known students
     populateWeekSelect();
-    checkNameAndLoad(); // Initial load of student data
+    checkNameAndLoad(); // FIX: Call this immediately to update the display for the pre-populated name
+    
     // initial toggle/button visibility
     menuButtonEl.style.display = 'none';
     // Default: show sentence toggle on by default (persisted above)
