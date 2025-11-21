@@ -92,38 +92,30 @@
     .primary-action{padding:12px 20px;border-radius:10px;border:none;cursor:pointer;background:var(--ok);color:#fff;font-size:1.05rem}
     
     /* Name and Practice Styles */
-    #nameInputContainer{display:flex;flex-direction:column;gap:5px;align-items:center;width:80%;max-width:300px;margin-bottom:10px;}
-    
-    /* NEW: Wrapper for Datalist input to hold a visual indicator */
-    #nameInputWrapper {
-        position: relative;
-        width: 100%;
-        display: flex;
-        align-items: center; 
+    #nameInputContainer{
+        display:flex;
+        flex-direction:column;
+        gap:5px;
+        align-items:center;
+        width:80%;
+        max-width:300px;
+        margin-bottom:10px;
     }
-    
-    /* Updated name input styling for datalist */
-    #studentNameInput{
+
+    #studentNameInput, #knownStudentsSelect {
         padding:8px 10px;
         border-radius:6px;
         border:1px solid #ccc;
         width:100%;
         text-align:center;
-        /* Make space for the icon */
-        padding-right: 30px; 
-    }
-    
-    /* NEW: Visual indicator for the Datalist */
-    #nameInputWrapper::after {
-        content: '▼'; 
-        position: absolute;
-        right: 10px;
-        color: #999;
-        font-size: 0.75rem;
-        pointer-events: none; /* Allows click-through to the input */
+        margin-bottom: 5px; /* Space between input and select */
     }
 
-    /* Fix: Removed default content from HTML, now set by JS */
+    /* Keep the input visible when editing/adding a new name */
+    #studentNameInput {
+        display: block; 
+    }
+    
     #currentStudentDisplay{font-weight:700;color:var(--accent);margin:0;min-height:20px;} 
     #practiceTestSection{
         display: none;
@@ -259,9 +251,8 @@
     <div id="startScreen" role="region" aria-label="Start screen">
         <div id="nameInputContainer">
             <label for="studentNameInput">Enter UserName to Save Progress:</label>
-            <div id="nameInputWrapper"> 
-                <input id="studentNameInput" list="knownStudentsList" type="text" placeholder="e.g., John Doe" autocomplete="name" />
-                <datalist id="knownStudentsList"></datalist> </div>
+            <input id="studentNameInput" type="text" placeholder="Type a new name or select existing" autocomplete="name" />
+            <select id="knownStudentsSelect"></select>
             <p id="currentStudentDisplay"></p>
         </div>
         
@@ -428,8 +419,7 @@
     
     // Name and Practice Refs
     const studentNameInputEl = document.getElementById('studentNameInput');
-    // NEW DATALIST REF
-    const knownStudentsListEl = document.getElementById('knownStudentsList');
+    const knownStudentsSelectEl = document.getElementById('knownStudentsSelect'); // NEW: Select element
     
     const currentStudentDisplayEl = document.getElementById('currentStudentDisplay');
     const practiceTestSectionEl = document.getElementById('practiceTestSection');
@@ -481,8 +471,8 @@
     // Load last used name
     const lastUsedName = localStorage.getItem(LAST_NAME_KEY);
     if (lastUsedName) {
-        studentNameInputEl.value = lastUsedName;
-        // FIXED: Explicitly set the correct status on load to prevent 'Name not set.' flash
+        studentNameInputEl.value = ''; // Clear the input field initially if a name is loaded into select
+        knownStudentsSelectEl.value = lastUsedName; // Try to select the last used name
         currentStudentDisplayEl.textContent = `Progress saved for: ${lastUsedName}`; 
     } else {
         currentStudentDisplayEl.textContent = 'Name not set.';
@@ -519,7 +509,6 @@
         const storedList = localStorage.getItem(KNOWN_STUDENTS_KEY);
         try {
             knownStudents = storedList ? JSON.parse(storedList) : [];
-            // Ensure it's an array and only contains unique strings
             if (!Array.isArray(knownStudents)) knownStudents = [];
             knownStudents = [...new Set(knownStudents.filter(n => typeof n === 'string' && n.trim()))];
         } catch (e) {
@@ -527,24 +516,42 @@
             knownStudents = [];
         }
         
-        populateKnownStudentsList();
+        populateKnownStudentsSelect();
     }
     
-    function populateKnownStudentsList() {
-        knownStudentsListEl.innerHTML = '';
-        
-        // Always populate the datalist with all known names (even if only one is present)
+    function populateKnownStudentsSelect() {
+        knownStudentsSelectEl.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = '--- Select an existing user ---';
+        knownStudentsSelectEl.appendChild(defaultOption);
+
         knownStudents.forEach(name => {
             const option = document.createElement('option');
             option.value = name;
-            knownStudentsListEl.appendChild(option);
+            option.textContent = name;
+            knownStudentsSelectEl.appendChild(option);
         });
-        
-        // Always ensure the datalist attribute is set if we have names to suggest
-        if (knownStudents.length > 0) { 
-            studentNameInputEl.setAttribute('list', 'knownStudentsList');
+
+        // Try to select the last used name again after populating
+        const lastUsedName = localStorage.getItem(LAST_NAME_KEY);
+        if (lastUsedName && knownStudents.includes(lastUsedName)) {
+            knownStudentsSelectEl.value = lastUsedName;
+            checkNameAndLoad(lastUsedName); // Load data for the pre-selected user
         } else {
-            studentNameInputEl.removeAttribute('list');
+            // If no lastUsedName or it's not in the list, set default
+            knownStudentsSelectEl.value = '';
+            checkNameAndLoad(''); // Ensure state is reset if no user is selected
+        }
+        
+        // Hide/show the select based on number of known users
+        knownStudentsSelectEl.style.display = knownStudents.length > 0 ? 'block' : 'none';
+        
+        // If there's only one user, pre-select it and hide the dropdown
+        if (knownStudents.length === 1 && !lastUsedName) {
+            knownStudentsSelectEl.value = knownStudents[0];
+            knownStudentsSelectEl.style.display = 'none'; // Hide if only one option after selection
+            checkNameAndLoad(knownStudents[0]);
         }
     }
 
@@ -554,10 +561,12 @@
         
         if (!knownStudents.includes(name)) {
             knownStudents.push(name);
-            knownStudents.sort(); // Keep the list sorted
+            knownStudents.sort(); 
             try {
                 localStorage.setItem(KNOWN_STUDENTS_KEY, JSON.stringify(knownStudents));
-                populateKnownStudentsList(); // Re-populate the datalist
+                populateKnownStudentsSelect(); 
+                // After adding a new student, select them in the dropdown
+                knownStudentsSelectEl.value = name; 
             } catch (e) {
                 console.error("Error saving known students list:", e);
             }
@@ -584,9 +593,7 @@
             historicalErrors = {};
         }
         
-        // Update display text (safe redundancy with init block)
         currentStudentDisplayEl.textContent = `Progress saved for: ${name}`;
-        
         updatePracticeListVisibility();
     }
     
@@ -600,559 +607,4 @@
         }
     }
 
-    // Called when week changes or name changes
-    function checkNameAndLoad() {
-        const name = studentNameInputEl.value.trim();
-        
-        if (name) {
-            loadHistoricalErrors(name); // Load/set the name and update display
-            saveKnownStudent(name); // Ensure the name is added to the known users list
-        } else {
-            // Handle "Name not set" state
-            historicalErrors = {};
-            currentStudentName = '';
-            currentStudentDisplayEl.textContent = 'Name not set.';
-            practiceTestSectionEl.style.display = 'none';
-        }
-        
-        // Ensure the main test button is disabled if no name is present
-        startButtonEl.disabled = !name;
-    }
-    
-    // Tracks if a word was correct or incorrect in the historicalErrors structure
-    function updateErrorHistory(word, isCorrect) {
-        const key = word.toLowerCase();
-        historicalErrors[key] = historicalErrors[key] || { errors: 0, correct: 0 };
-        
-        if (!isCorrect) {
-            historicalErrors[key].errors = (historicalErrors[key].errors || 0) + 1;
-        } else {
-            historicalErrors[key].correct = (historicalErrors[key].correct || 0) + 1;
-        }
-    }
-    
-    // Determines which words the student keeps getting wrong (now 1 or more times)
-    function getWordsWithRepeatedErrors() {
-        const problemWords = [];
-        
-        // 1. Check current week's words against the student's historical errors
-        for (const item of spellingList) {
-            const history = historicalErrors[item.word.toLowerCase()];
-            // Check for 1 or more errors
-            if (history && history.errors >= 1) { 
-                problemWords.push(item);
-            }
-        }
-        
-        return problemWords;
-    }
-    
-    function updatePracticeListVisibility() {
-        // Must ensure we have the correct full spelling list for the current week selected in the dropdown
-        const currentWeekData = weeksData.find(w => w.id === weekSelectEl.value);
-        if (!currentWeekData) return;
-        
-        // Temporarily set spellingList to the full set of words to check historical errors against it
-        const originalSpellingList = spellingList;
-        spellingList = currentWeekData.words.slice();
-        
-        const problemWords = getWordsWithRepeatedErrors();
-        
-        // Restore spellingList to whatever it was before (e.g., if it was an empty list on reset)
-        spellingList = originalSpellingList;
-        
-        if (problemWords.length > 0 && currentStudentName) {
-            practiceListInfoEl.textContent = `You have missed ${problemWords.length} words one or more times.`;
-            practiceTestSectionEl.style.display = 'flex';
-        } else {
-            practiceTestSectionEl.style.display = 'none';
-        }
-    }
-    
-    // Start the test using the list of problem words
-    function startPracticeTest() {
-        const currentWeekData = weeksData.find(w => w.id === weekSelectEl.value);
-        if (!currentWeekData) {
-            alert('Cannot load week data for practice test.');
-            return;
-        }
-        
-        // Use the selected week's full list to determine the practice words
-        spellingList = currentWeekData.words.slice();
-        const practiceWords = getWordsWithRepeatedErrors();
-        
-        if (practiceWords.length === 0) {
-            alert('Great job! No repeated errors found to practice in this week.');
-            // Re-load the correct week display after alert
-            loadWeek(currentWeekData); 
-            return;
-        }
-        
-        // Set the spellingList to ONLY the practice words
-        spellingList = practiceWords;
-        
-        // Use a fallback label if currentWeek is somehow undefined (for robustness)
-        const weekLabel = currentWeek ? currentWeek.label : 'Current Week';
-        weekLabelEl.textContent = `PRACTICE LIST (${weekLabel}) - ${spellingList.length} words`;
-        
-        startTest(true); // Pass flag to startTest
-    }
-
-    // ======================
-    // Toggle Event Listeners
-    // ======================
-
-    soundToggleEl.addEventListener('change', () => {
-      soundEnabled = soundToggleEl.checked;
-      localStorage.setItem(SOUND_KEY, String(soundEnabled));
-      soundLabelEl.textContent = soundEnabled ? 'Sound effects (ON)' : 'Sound effects (OFF)';
-      if (!soundEnabled && audioCtx && audioCtx.state !== 'closed') audioCtx.suspend().catch(()=>{});
-      else if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
-    });
-
-    showSentenceToggleEl.addEventListener('change', () => {
-      showSentenceEnabled = showSentenceToggleEl.checked;
-      localStorage.setItem(SHOW_SENTENCE_KEY, String(showSentenceEnabled));
-      showSentenceLabelEl.textContent = showSentenceEnabled ? 'Show sentence (ON)' : 'Show sentence (OFF)';
-      // update display for current word immediately
-      if (testInterfaceEl.style.display !== 'none') {
-        if (showSentenceEnabled) displayBlankedSentence(currentWordIndex);
-        else { document.getElementById('contextDisplay').style.display = 'none'; }
-      }
-    });
-    
-    autoSpeakSentenceToggleEl.addEventListener('change', () => {
-      autoSpeakSentenceEnabled = autoSpeakSentenceToggleEl.checked;
-      localStorage.setItem(AUTO_SPEAK_SENTENCE_KEY, String(autoSpeakSentenceEnabled));
-      autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence (ON)' : 'Speak word then sentence (OFF)';
-    });
-    
-    // TOGGLE LOGIC: Disable Spellcheck
-    disableSpellcheckToggleEl.addEventListener('change', () => {
-      disableSpellcheckEnabled = disableSpellcheckToggleEl.checked;
-      localStorage.setItem(DISABLE_SPELLCHECK_KEY, String(disableSpellcheckEnabled));
-      disableSpellcheckLabelEl.textContent = disableSpellcheckEnabled ? 'Disable browser spellcheck (ON)' : 'Disable browser spellcheck (OFF)';
-      // The key change: set spellcheck attribute on the input field
-      inputEl.spellcheck = !disableSpellcheckEnabled; 
-    });
-    
-    // Name input listener (calls checkNameAndLoad on every change/selection)
-    studentNameInputEl.addEventListener('input', checkNameAndLoad);
-    studentNameInputEl.addEventListener('change', checkNameAndLoad); 
-    studentNameInputEl.addEventListener('blur', checkNameAndLoad); 
-
-
-    // ======================
-    // Settings Panel Logic
-    // ======================
-
-    settingsIconEl.addEventListener('click', () => {
-        settingsPanelEl.style.display = 'flex';
-        // Ensure the main test container is hidden/disabled for screen readers
-        document.getElementById('container').setAttribute('aria-hidden', 'true');
-        settingsPanelEl.setAttribute('aria-hidden', 'false');
-        closeSettingsButtonEl.focus();
-    });
-
-    closeSettingsButtonEl.addEventListener('click', () => {
-        settingsPanelEl.style.display = 'none';
-        document.getElementById('container').setAttribute('aria-hidden', 'false');
-        settingsPanelEl.setAttribute('aria-hidden', 'true');
-        settingsIconEl.focus();
-    });
-
-
-    // ======================
-    // Voice / audio
-    // ======================
-    let selectedUKVoice = null;
-    function loadVoices() {
-      const voices = speechSynthesis.getVoices() || [];
-      if (!voices.length) return;
-      selectedUKVoice =
-        voices.find(v => v.lang && v.lang.toLowerCase().includes('en-gb') && /female/i.test(v.name)) ||
-        voices.find(v => v.lang && v.lang.toLowerCase().includes('en-gb')) ||
-        null;
-    }
-    loadVoices();
-    speechSynthesis.onvoiceschanged = loadVoices;
-
-    function createUtterance(text) {
-      const u = new SpeechSynthesisUtterance(text);
-      if (selectedUKVoice) { u.voice = selectedUKVoice; u.rate = 0.9; }
-      else u.lang = 'en-GB';
-      return u;
-    }
-
-    // WebAudio for feedback
-    let audioCtx = null;
-    function ensureAudioContext() {
-      if (!soundEnabled) return null;
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
-      return audioCtx;
-    }
-    function playCorrectSound() {
-      if (!soundEnabled) return;
-      const ctx = ensureAudioContext(); if (!ctx) return;
-      const now = ctx.currentTime; const o = ctx.createOscillator(); const g = ctx.createGain();
-      o.type='sine'; o.frequency.setValueAtTime(880, now); o.frequency.exponentialRampToValueAtTime(1320, now+0.14);
-      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.25, now+0.01); g.gain.exponentialRampToValueAtTime(0.001, now+0.5);
-      o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now+0.6);
-    }
-    function playWrongSound() {
-      if (!soundEnabled) return;
-      const ctx = ensureAudioContext(); if (!ctx) return;
-      const now = ctx.currentTime; const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
-      o1.type='sawtooth'; o1.frequency.setValueAtTime(220, now);
-      o2.type='sine'; o2.frequency.setValueAtTime(270, now);
-      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.22, now+0.01); g.gain.exponentialRampToValueAtTime(0.001, now+0.5);
-      o1.connect(g); o2.connect(g); g.connect(ctx.destination); o1.start(now); o2.start(now+0.02); o1.stop(now+0.45); o2.stop(now+0.45);
-    }
-
-    // ======================
-    // Week selector logic
-    // ======================
-    function populateWeekSelect() {
-      weekSelectEl.innerHTML = '';
-      const sorted = weeksData.slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
-      for (const w of sorted) {
-        const opt = document.createElement('option');
-        opt.value = w.id;
-        opt.textContent = `${w.label} — ${w.date}`;
-        weekSelectEl.appendChild(opt);
-      }
-      const defaultIndex = findMostRelevantWeekIndex(sorted);
-      weekSelectEl.selectedIndex = defaultIndex;
-      loadWeek(sorted[defaultIndex]);
-    }
-
-    // FUNCTION TO ALWAYS SELECT THE NEWEST SET
-    function findMostRelevantWeekIndex(sortedWeeks) {
-      // Always select the last, most recent week in the list (which is already sorted by date).
-      return sortedWeeks.length ? sortedWeeks.length - 1 : 0;
-    }
-
-    function loadWeekById(id) {
-      const week = weeksData.find(w => w.id === id);
-      if (week) loadWeek(week);
-    }
-
-    function loadWeek(week) {
-      currentWeek = week;
-      // When a new week is loaded, reset spellingList to the full set
-      spellingList = week.words.slice(); 
-      weekLabelEl.textContent = week.label || '';
-      weekDateEl.textContent = week.date || '';
-      document.title = `Y6 Spelling Test — ${week.label || week.date || ''}`;
-      
-      // When week changes, reload historical errors for the current user and update practice button
-      checkNameAndLoad();
-      
-      resetToStartScreen(); 
-      buildProgressBar();
-    }
-    weekSelectEl.addEventListener('change', (e)=> loadWeekById(e.target.value));
-
-    // ======================
-    // Core test logic
-    // ======================
-    function buildProgressBar() {
-      progressBarContainerEl.innerHTML = '';
-      for (let i=0;i<spellingList.length;i++){
-        const seg = document.createElement('div');
-        seg.className = 'progressSegment';
-        progressBarContainerEl.appendChild(seg);
-      }
-    }
-    function updateScoreAndProgress() {
-      const wordsCompleted = resultsLog.length;
-      scoreEl.textContent = `Score: ${score} / ${wordsCompleted}`;
-      if (currentWordIndex < spellingList.length) progressEl.textContent = `Word ${currentWordIndex + 1} of ${spellingList.length}`;
-      const segments = progressBarContainerEl.children;
-      for (let i=0;i<segments.length;i++){
-        segments[i].className = 'progressSegment';
-        if (i < resultsLog.length) segments[i].classList.add(resultsLog[i].isCorrect ? 'correct' : 'incorrect');
-      }
-    }
-    function toggleButtons(enable){
-      submitButtonEl.disabled = !enable;
-      sayAgainButtonEl.disabled = !enable;
-      inputEl.disabled = !enable;
-    }
-    
-    // Displays blanked sentence if toggle is checked.
-    function updateProgressScreen() {
-      inputEl.value = '';
-      messageEl.textContent = ''; 
-      const ctx = document.getElementById('contextDisplay');
-      // Always hide context by default when moving to next step
-      ctx.style.display = 'none';
-      ctx.textContent = '';
-      
-      continueButtonEl.style.display = 'none';
-      toggleButtons(true);
-      updateScoreAndProgress();
-      
-      // If "Show sentence" is enabled, display blanked sentence for the current word immediately
-      if (showSentenceToggleEl.checked) {
-          displayBlankedSentence(currentWordIndex);
-      }
-    }
-
-    function displayBlankedSentence(index) {
-      const ctx = document.getElementById('contextDisplay');
-      if (!spellingList || index == null || index >= spellingList.length) { ctx.style.display = 'none'; return; }
-      const item = spellingList[index];
-      const regex = new RegExp(escapeRegExp(item.word), 'gi');
-      const blanked = item.sentence.replace(regex, '______');
-      ctx.innerHTML = blanked;
-      ctx.style.display = 'block';
-    }
-    
-    // Chains word and sentence speech.
-    function speakWordAndSentence() {
-      if (!spellingList || currentWordIndex >= spellingList.length) return;
-      const word = spellingList[currentWordIndex].word;
-      const sentence = spellingList[currentWordIndex].sentence;
-      
-      // Set message and focus immediately
-      messageEl.textContent = "🔊 Speaking the word, then the sentence. Type the word here…"; 
-      inputEl.focus();
-
-      const wordUtt = createUtterance(word);
-      const sentenceUtt = createUtterance(sentence);
-
-      // Chain the sentence to the word's end
-      wordUtt.onend = () => {
-        // If the word finishes naturally, play the sentence.
-        speechSynthesis.speak(sentenceUtt);
-      };
-
-      speechSynthesis.speak(wordUtt);
-    }
-
-    // Focuses input and updates message immediately to allow typing during speech
-    function speakWord() {
-      if (!spellingList || currentWordIndex >= spellingList.length) return;
-      
-      speechSynthesis.cancel(); // Cancel any previous speech before starting a new one
-
-      // If sentence context is not being auto-read, still ensure it's displayed if the toggle is ON
-      if (showSentenceToggleEl.checked) {
-        displayBlankedSentence(currentWordIndex);
-      }
-      
-      if (autoSpeakSentenceToggleEl.checked) {
-          speakWordAndSentence();
-          return;
-      }
-      
-      const word = spellingList[currentWordIndex].word;
-      const utt = createUtterance(word);
-
-      // Set message and focus immediately
-      messageEl.textContent = "🔊 Speaking the word. Type the word here…";
-      inputEl.focus();
-      
-      speechSynthesis.speak(utt);
-    }
-
-    function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
-
-    function checkSpelling() {
-      // Cancel any ongoing speech when the user submits their answer
-      speechSynthesis.cancel(); 
-
-      if (!spellingList || currentWordIndex >= spellingList.length) return;
-      const typed = inputEl.value.trim();
-      const correct = spellingList[currentWordIndex].word;
-      if (!typed) { messageEl.textContent = "⚠️ Please type a word first!"; return; }
-      const isCorrect = typed.toLowerCase() === correct.toLowerCase();
-      
-      // Update and save historical errors
-      updateErrorHistory(correct, isCorrect);
-      saveHistoricalErrors();
-
-      resultsLog.push({ index: currentWordIndex+1, submittedWord: typed, correctWord: correct, isCorrect });
-      toggleButtons(false);
-      if (isCorrect) {
-        playCorrectSound();
-        score++;
-        messageEl.textContent = "✅ Correct!";
-        currentWordIndex++;
-        updateScoreAndProgress();
-        setTimeout(nextStep, 700);
-      } else {
-        playWrongSound();
-        messageEl.textContent = `❌ Incorrect — correct: "${correct}".`;
-        currentWordIndex++;
-        updateScoreAndProgress();
-        // Show centered Continue button when incorrect
-        continueButtonEl.style.display = 'block';
-        continueButtonEl.focus();
-      }
-    }
-
-    function nextStep(){
-      if (currentWordIndex < spellingList.length) {
-        updateProgressScreen();
-        speakWord();
-      } else {
-        finishTest();
-      }
-    }
-
-    // UPDATED to show score at the top and add animation
-    function displayResults(){
-      testInterfaceEl.style.display = 'none';
-      resultsEl.style.display = 'block';
-      
-      // SET THE FINAL SCORE at the top of the results page
-      finalScoreDisplayEl.textContent = `${score} / ${spellingList.length}`;
-
-      // Apply animation class to Woofs image
-      woofsImageEl.classList.add('animate-woof');
-
-      resultsTableBodyEl.innerHTML = '';
-      for (const log of resultsLog) {
-        const row = resultsTableBodyEl.insertRow();
-        row.className = log.isCorrect ? 'correct' : 'incorrect';
-        row.insertCell().textContent = log.index;
-        row.insertCell().textContent = log.submittedWord;
-        row.insertCell().textContent = log.correctWord;
-        row.insertCell().textContent = log.isCorrect ? 'Correct' : 'Incorrect';
-      }
-      
-      // Update practice list status after test
-      updatePracticeListVisibility();
-    }
-
-    function finishTest() {
-      progressEl.textContent = "TEST FINISHED!";
-      scoreEl.textContent = `Final Score: ${score} / ${spellingList.length}`;
-      messageEl.textContent = `🎉 Test Complete!`; 
-      updateScoreAndProgress();
-      displayResults();
-      // hide buttons while on results
-      sayAgainButtonEl.style.display = 'none';
-      submitButtonEl.style.display = 'none';
-      continueButtonEl.style.display = 'none';
-      // Hide week selector on results
-      weekBarEl.style.display = 'none';
-      // show only Menu button
-      menuButtonEl.style.display = 'inline-block';
-    }
-
-    // start/reset helpers
-    // Updated to accept a flag for a practice test
-    function startTest(isPractice = false) {
-      const name = studentNameInputEl.value.trim();
-      if (!name) {
-        alert("Please enter your name/ID before starting the test.");
-        studentNameInputEl.focus();
-        return;
-      }
-      
-      // Ensure the current name is loaded and saved before starting
-      checkNameAndLoad(); 
-      
-      // If not a practice test, ensure the spelling list is the full list for the selected week
-      if (!isPractice) {
-          const originalWeek = weeksData.find(w => w.id === weekSelectEl.value);
-          if (originalWeek) spellingList = originalWeek.words.slice();
-      }
-
-      // Remove animation class when starting test
-      woofsImageEl.classList.remove('animate-woof');
-
-      // hide week selector once the test starts
-      weekBarEl.style.display = 'none';
-      // hide name input
-      document.getElementById('nameInputContainer').style.display = 'none';
-      // restore UI
-      sayAgainButtonEl.style.display = 'inline-block';
-      submitButtonEl.style.display = 'inline-block';
-      continueButtonEl.style.display = 'none';
-      startScreenEl.style.display = 'none';
-      resultsEl.style.display = 'none';
-      testInterfaceEl.style.display = 'block';
-      // reset state
-      currentWordIndex = 0;
-      score = 0;
-      resultsLog = [];
-      buildProgressBar();
-      updateProgressScreen();
-      // speak first word automatically
-      setTimeout(speakWord, 300);
-    }
-
-    function resetToStartScreen() {
-      // Restore the full list when returning to the start screen
-      const originalWeek = weeksData.find(w => w.id === weekSelectEl.value);
-      if (originalWeek) spellingList = originalWeek.words.slice();
-      
-      // Remove animation class when resetting
-      woofsImageEl.classList.remove('animate-woof');
-
-      currentWordIndex = 0;
-      score = 0;
-      resultsLog = [];
-      inputEl.value = '';
-      messageEl.textContent = '';
-      testInterfaceEl.style.display = 'none';
-      resultsEl.style.display = 'none';
-      startScreenEl.style.display = 'flex';
-      // show name input
-      document.getElementById('nameInputContainer').style.display = 'flex';
-      // show week selector on start screen
-      weekBarEl.style.display = 'flex';
-      // hide menu button while on start screen
-      menuButtonEl.style.display = 'none';
-      
-      // Reload state and update practice button visibility
-      checkNameAndLoad();
-    }
-
-    // ======================
-    // Event wiring
-    // ======================
-    startButtonEl.addEventListener('click', ()=> { startTest(); });
-    practiceButtonEl.addEventListener('click', ()=> { startPracticeTest(); }); 
-    
-    // Say Again button now calls speakWord, which handles the auto-sentence toggle
-    sayAgainButtonEl.addEventListener('click', ()=> {
-      if (soundEnabled) ensureAudioContext();
-      if (testInterfaceEl.style.display === 'none') { startTest(); return; }
-      speakWord(); 
-    });
-    
-    submitButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); checkSpelling(); });
-    continueButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); nextStep(); inputEl.focus(); });
-    menuButtonEl.addEventListener('click', resetToStartScreen);
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        if (settingsPanelEl.style.display === 'flex') { /* Do nothing if settings panel is open */ }
-        else if (startScreenEl.style.display !== 'none' && !startButtonEl.disabled) { e.preventDefault(); startButtonEl.click(); }
-        else if (continueButtonEl.style.display === 'block') { e.preventDefault(); continueButtonEl.click(); }
-        else if (!submitButtonEl.disabled) { e.preventDefault(); checkSpelling(); }
-      }
-    });
-
-    // ======================
-    // Initialization
-    // ======================
-    loadKnownStudents(); // Load the list of known students and populate the datalist
-    populateWeekSelect();
-    checkNameAndLoad(); // Final check to ensure button state and practice section visibility are correct
-    
-    // initial toggle/button visibility
-    menuButtonEl.style.display = 'none';
-    // Default: show sentence toggle on by default (persisted above)
-    if (showSentenceToggleEl.checked) {
-      showSentenceToggleEl.dispatchEvent(new Event('change'));
-    }
-  </script>
-</body>
-</html>
+    function check
