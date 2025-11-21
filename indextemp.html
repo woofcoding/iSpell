@@ -98,17 +98,73 @@
         gap:5px;
         align-items:center;
         width:80%;
-        max-width:300px;
+        max-width:320px;
         margin-bottom:10px;
     }
 
-    #studentNameInput, #knownStudentsSelect {
+    #studentNameInput {
         padding:8px 10px;
         border-radius:6px;
         border:1px solid #ccc;
         width:100%;
         text-align:center;
-        margin-bottom: 5px; /* Space between input and select */
+        margin-bottom: 5px; 
+    }
+
+    /* Custom Known Users List */
+    #knownStudentsListContainer {
+        width: 100%;
+        margin-top: 5px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        max-height: 200px;
+        overflow-y: auto;
+        background: #f9f9f9;
+        display: none; /* Hidden if no known users */
+    }
+    .known-list-label {
+        font-size: 0.9em;
+        font-weight: 600;
+        color: var(--muted);
+        margin: 0 0 5px 0;
+        text-align: left;
+    }
+    .known-user-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 8px;
+        margin-bottom: 3px;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        border: 1px solid #eee;
+        transition: background-color 0.1s, border-color 0.1s;
+    }
+    .known-user-item:hover, .known-user-item.selected {
+        background-color: #e6f7ff;
+        border-color: var(--accent);
+    }
+    .known-user-name {
+        flex-grow: 1;
+        text-align: left;
+    }
+    .delete-button {
+        background: none;
+        border: none;
+        color: var(--bad);
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 2px 5px;
+        margin-left: 10px;
+        transition: color 0.1s, transform 0.1s;
+    }
+    .delete-button:hover {
+        color: #a00;
+        transform: scale(1.1);
     }
 
     #currentStudentDisplay{font-weight:700;color:var(--accent);margin:0;min-height:20px;} 
@@ -240,16 +296,19 @@
       <label for="weekSelect">Choose week:</label>
       <select id="weekSelect" aria-label="Choose week"></select>
       <div id="weekInfo" aria-hidden="false">
-        <div id="weekLabel"></div>
-        <div id="weekDate"></div>
-      </div>
+        </div>
     </div>
 
     <div id="startScreen" role="region" aria-label="Start screen">
         <div id="nameInputContainer">
             <label for="studentNameInput">Enter New User Name or Select Existing:</label>
             <input id="studentNameInput" type="text" placeholder="Type a new name..." autocomplete="name" />
-            <select id="knownStudentsSelect" aria-label="Select an existing user"></select>
+            
+            <div id="knownStudentsListContainer">
+                <p class="known-list-label">Known Users (Click to Select, ❌ to Delete):</p>
+                <div id="knownStudentsList"></div>
+            </div>
+            
             <p id="currentStudentDisplay"></p>
         </div>
         
@@ -407,8 +466,7 @@
     let knownStudents = [];
 
     const weekSelectEl = document.getElementById('weekSelect');
-    const weekLabelEl = document.getElementById('weekLabel');
-    const weekDateEl = document.getElementById('weekDate');
+    // Removed weekLabelEl, weekDateEl
     const weekBarEl = document.getElementById('weekBar');
 
     const startScreenEl = document.getElementById('startScreen');
@@ -416,7 +474,8 @@
     
     // Name and Practice Refs
     const studentNameInputEl = document.getElementById('studentNameInput'); // Input for NEW names
-    const knownStudentsSelectEl = document.getElementById('knownStudentsSelect'); // Select for KNOWN names
+    const knownStudentsListContainerEl = document.getElementById('knownStudentsListContainer'); // New container for custom list
+    const knownStudentsListEl = document.getElementById('knownStudentsList'); // New custom list element
     
     const currentStudentDisplayEl = document.getElementById('currentStudentDisplay');
     const practiceTestSectionEl = document.getElementById('practiceTestSection');
@@ -503,48 +562,60 @@
             knownStudents = [];
         }
         
-        populateKnownStudentsSelect();
+        renderKnownStudentsList();
     }
     
-    function populateKnownStudentsSelect() {
-        knownStudentsSelectEl.innerHTML = '';
+    function renderKnownStudentsList() {
+        knownStudentsListEl.innerHTML = '';
         
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = '--- Select an existing user ---';
-        knownStudentsSelectEl.appendChild(defaultOption);
+        if (knownStudents.length === 0) {
+            knownStudentsListContainerEl.style.display = 'none';
+            return;
+        }
+        
+        knownStudents.sort((a, b) => a.localeCompare(b)).forEach(name => {
+            const item = document.createElement('div');
+            item.className = 'known-user-item';
+            item.setAttribute('data-name', name);
+            if (name === currentStudentName) {
+                item.classList.add('selected');
+            }
+            
+            // Name display element (clickable for selection)
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'known-user-name';
+            nameSpan.textContent = name;
+            item.appendChild(nameSpan);
 
-        knownStudents.sort().forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            knownStudentsSelectEl.appendChild(option);
+            // Delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.textContent = '❌';
+            deleteButton.setAttribute('aria-label', `Delete user ${name}`);
+            deleteButton.onclick = (e) => {
+                e.stopPropagation(); // Prevent item selection when deleting
+                deleteStudent(name);
+            };
+            item.appendChild(deleteButton);
+            
+            // Selection click handler
+            item.onclick = (e) => {
+                // Clicking on the name or the item body selects the user
+                checkNameAndLoad(name, true);
+            };
+
+            knownStudentsListEl.appendChild(item);
         });
 
-        // Try to select the last used name
+        knownStudentsListContainerEl.style.display = 'block';
+
+        // Re-select the last used name if it exists and hasn't been deleted
         const lastUsedName = localStorage.getItem(LAST_NAME_KEY);
         if (lastUsedName && knownStudents.includes(lastUsedName)) {
-            knownStudentsSelectEl.value = lastUsedName;
-            studentNameInputEl.style.display = 'none'; // Hide input if a known user is selected
-            checkNameAndLoad(lastUsedName); 
-        } else {
-            knownStudentsSelectEl.value = ''; // Ensure no option is selected if no last name is valid
-            studentNameInputEl.style.display = 'block'; // Show input if no user is pre-selected
-            checkNameAndLoad('');
-        }
-        
-        // Only show the select if there are users to select, otherwise, only show the input
-        if (knownStudents.length > 0) {
-            knownStudentsSelectEl.style.display = 'block';
-        } else {
-             knownStudentsSelectEl.style.display = 'none';
-             studentNameInputEl.style.display = 'block'; // Make sure input is visible if no known users
-        }
-
-        // Handle case where input is used to ADD a new name 
-        if (studentNameInputEl.value.trim() !== '') {
-            knownStudentsSelectEl.value = ''; // Ensure select is reset when typing a new name
-            checkNameAndLoad(studentNameInputEl.value.trim());
+            checkNameAndLoad(lastUsedName, true);
+        } else if (lastUsedName && !knownStudents.includes(lastUsedName)) {
+             // If lastUsedName was deleted, clear the current state
+             checkNameAndLoad('');
         }
     }
 
@@ -557,11 +628,34 @@
             knownStudents.sort(); 
             try {
                 localStorage.setItem(KNOWN_STUDENTS_KEY, JSON.stringify(knownStudents));
-                populateKnownStudentsSelect(); 
+                renderKnownStudentsList(); 
             } catch (e) {
                 console.error("Error saving known students list:", e);
             }
         }
+    }
+    
+    function deleteStudent(name) {
+        if (!confirm(`Are you sure you want to delete user "${name}" and all their spelling history?`)) {
+            return;
+        }
+        
+        // 1. Remove from knownStudents array
+        knownStudents = knownStudents.filter(n => n !== name);
+        localStorage.setItem(KNOWN_STUDENTS_KEY, JSON.stringify(knownStudents));
+        
+        // 2. Remove history from storage
+        localStorage.removeItem(getStorageKey(name));
+
+        // 3. If this was the currently selected user, reset state
+        if (currentStudentName === name) {
+            localStorage.removeItem(LAST_NAME_KEY);
+            studentNameInputEl.value = ''; // Clear input if it was pre-filled
+            checkNameAndLoad('');
+        }
+        
+        // 4. Refresh the list display
+        renderKnownStudentsList();
     }
     
     function loadHistoricalErrors(name) {
@@ -600,26 +694,28 @@
     }
 
     // New or Selected Name Handler
-    function checkNameAndLoad(sourceValue) {
+    // sourceName: the name from the input or the name from a list click
+    // isFromList: true if the name came from clicking a list item
+    function checkNameAndLoad(sourceName, isFromList = false) {
         let name = '';
         
         // 1. Prioritize typed input if it has content (for new users)
         if (studentNameInputEl.value.trim() !== '') {
             name = studentNameInputEl.value.trim();
         } 
-        // 2. Otherwise, use the selected value from the dropdown
-        else if (knownStudentsSelectEl.value.trim() !== '') {
-            name = knownStudentsSelectEl.value.trim();
+        // 2. Otherwise, use the name passed from a list click
+        else if (sourceName) {
+            name = sourceName.trim();
         }
         
-        // Special case: If the source of the event is the select, clear the input
-        if (sourceValue === knownStudentsSelectEl.value && knownStudentsSelectEl.value.trim() !== '') {
-             studentNameInputEl.value = '';
+        // If selecting from list, move the name to the input for visual confirmation
+        if (isFromList && name) {
+            studentNameInputEl.value = name;
         }
 
         if (name) {
-            loadHistoricalErrors(name); // Load/set the name and update display
-            saveKnownStudent(name); // Ensure the name is added to the known users list
+            loadHistoricalErrors(name); 
+            saveKnownStudent(name); 
         } else {
             // Handle "Name not set" state
             historicalErrors = {};
@@ -628,7 +724,14 @@
             practiceTestSectionEl.style.display = 'none';
         }
         
-        // Ensure the main test button is disabled if no name is present
+        // Update the list visually to show selected item
+        document.querySelectorAll('.known-user-item').forEach(item => {
+            item.classList.remove('selected');
+            if (item.getAttribute('data-name') === currentStudentName) {
+                item.classList.add('selected');
+            }
+        });
+        
         startButtonEl.disabled = !name;
     }
     
@@ -664,11 +767,13 @@
         const currentWeekData = weeksData.find(w => w.id === weekSelectEl.value);
         if (!currentWeekData) return;
         
+        // Temporarily set spellingList to the full current week list for checking
         const originalSpellingList = spellingList;
         spellingList = currentWeekData.words.slice();
         
         const problemWords = getWordsWithRepeatedErrors();
         
+        // Restore spellingList
         spellingList = originalSpellingList;
         
         if (problemWords.length > 0 && currentStudentName) {
@@ -687,7 +792,9 @@
             return;
         }
         
-        spellingList = currentWeekData.words.slice();
+        const originalSpellingList = currentWeekData.words.slice();
+        spellingList = originalSpellingList; // Set list for error check
+        
         const practiceWords = getWordsWithRepeatedErrors();
         
         if (practiceWords.length === 0) {
@@ -698,8 +805,7 @@
         
         spellingList = practiceWords;
         
-        const weekLabel = currentWeek ? currentWeek.label : 'Current Week';
-        weekLabelEl.textContent = `PRACTICE LIST (${weekLabel}) - ${spellingList.length} words`;
+        // Note: The weekLabel is not being set anymore, so no change needed here.
         
         startTest(true); 
     }
@@ -739,15 +845,17 @@
       inputEl.spellcheck = !disableSpellcheckEnabled; 
     });
     
-    // Name input listener (calls checkNameAndLoad on every change/selection)
+    // Name input listener 
     studentNameInputEl.addEventListener('input', () => checkNameAndLoad(studentNameInputEl.value));
     studentNameInputEl.addEventListener('change', () => checkNameAndLoad(studentNameInputEl.value));
-    studentNameInputEl.addEventListener('blur', () => checkNameAndLoad(studentNameInputEl.value)); 
-    
-    knownStudentsSelectEl.addEventListener('change', () => {
-        // Clear input when a selection is made from the dropdown
-        studentNameInputEl.value = ''; 
-        checkNameAndLoad(knownStudentsSelectEl.value);
+    studentNameInputEl.addEventListener('blur', () => {
+        // Only run checkNameAndLoad if the blur event is not caused by clicking on the list container
+        // Note: The delete button click handler handles this by using e.stopPropagation().
+        setTimeout(() => { // Small timeout to allow element focus change to register
+            if (!knownStudentsListContainerEl.contains(document.activeElement)) {
+                checkNameAndLoad(studentNameInputEl.value);
+            }
+        }, 0);
     });
 
     // ======================
@@ -825,7 +933,7 @@
       for (const w of sorted) {
         const opt = document.createElement('option');
         opt.value = w.id;
-        opt.textContent = `${w.label} — ${w.date}`;
+        opt.textContent = w.label; // Only show the label
         weekSelectEl.appendChild(opt);
       }
       const defaultIndex = findMostRelevantWeekIndex(sorted);
@@ -845,11 +953,11 @@
     function loadWeek(week) {
       currentWeek = week;
       spellingList = week.words.slice(); 
-      weekLabelEl.textContent = week.label || '';
-      weekDateEl.textContent = week.date || '';
+      // Removed lines setting textContent for weekLabelEl and weekDateEl per user request
+      
       document.title = `Y6 Spelling Test — ${week.label || week.date || ''}`;
       
-      checkNameAndLoad();
+      checkNameAndLoad(currentStudentName);
       
       resetToStartScreen(false); // Reset without re-populating the select/name state
       buildProgressBar();
@@ -1027,12 +1135,10 @@
     }
 
     function startTest(isPractice = false) {
-      const name = currentStudentName; // Use the name confirmed by checkNameAndLoad
+      const name = currentStudentName; 
       if (!name) {
         alert("Please enter or select your name/ID before starting the test.");
-        // Try to focus the appropriate element
-        if (studentNameInputEl.style.display !== 'none') studentNameInputEl.focus();
-        else knownStudentsSelectEl.focus();
+        studentNameInputEl.focus();
         return;
       }
       
@@ -1083,9 +1189,9 @@
       menuButtonEl.style.display = 'none';
       
       if (fullReset) {
-          loadKnownStudents(); // Re-populate and select last known user
+          loadKnownStudents(); 
       }
-      checkNameAndLoad();
+      checkNameAndLoad(currentStudentName);
     }
 
     // ======================
@@ -1102,7 +1208,7 @@
     
     submitButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); checkSpelling(); });
     continueButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); nextStep(); inputEl.focus(); });
-    menuButtonEl.addEventListener('click', () => resetToStartScreen(true)); // Full reset when returning to menu
+    menuButtonEl.addEventListener('click', () => resetToStartScreen(true)); 
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
