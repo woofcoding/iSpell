@@ -178,8 +178,14 @@
     #resultsTable th,#resultsTable td{border:1px solid #ddd;padding:8px;text-align:center}
     .correct{background:#e6ffe6}
     .incorrect{background:#ffe6e6}
-    #startAgainButton{margin-top:12px;background:var(--ok);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;float:right}
-    #menuButton{margin-top:12px;background:#4a7d97;color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;float:left}
+    /* Updated styling for the Menu button on the results page */
+    #menuButton{margin-top:12px;background:#4a7d97;color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;float:right}
+    /* Clear float after buttons for results layout */
+    .results-footer::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
     /* UPDATED MEDIA QUERY */
     @media (max-width:640px){ #status-area,#progressBarContainer,#input-submit-group{width:95%} }
   </style>
@@ -268,8 +274,9 @@
         <tbody></tbody>
       </table>
 
-      <button id="menuButton">Menu</button>
-      <button id="startAgainButton">Start Again</button>
+      <div class="results-footer">
+          <button id="menuButton">Menu</button>
+      </div>
     </div>
   </div>
 
@@ -406,7 +413,7 @@
     const resultsEl = document.getElementById('results');
     const finalScoreDisplayEl = document.getElementById('finalScoreDisplay'); 
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
-    const startAgainButtonEl = document.getElementById('startAgainButton');
+    // Removed startAgainButtonEl reference
     const menuButtonEl = document.getElementById('menuButton');
 
     // Settings Panel Refs
@@ -427,7 +434,7 @@
     const SHOW_SENTENCE_KEY = 'spellingShowSentence';
     const AUTO_SPEAK_SENTENCE_KEY = 'spellingAutoSpeakSentence'; 
     const DISABLE_SPELLCHECK_KEY = 'spellingDisableSpellcheck'; 
-    const LAST_NAME_KEY = 'spellingLastName'; // NEW: For remembering the last used name
+    const LAST_NAME_KEY = 'spellingLastName'; 
 
     let soundEnabled = localStorage.getItem(SOUND_KEY) === null ? true : localStorage.getItem(SOUND_KEY) === 'true';
     let showSentenceEnabled = localStorage.getItem(SHOW_SENTENCE_KEY) === null ? true : localStorage.getItem(SHOW_SENTENCE_KEY) === 'true';
@@ -462,7 +469,7 @@
     inputEl.spellcheck = !disableSpellcheckEnabled;
 
     // ======================
-    // NEW: Student History Logic
+    // Student History Logic
     // ======================
     
     // Key for localStorage specific to a student's spelling history
@@ -526,15 +533,15 @@
         }
     }
     
-    // Determines which words the student keeps getting wrong (e.g., missed 2+ times)
+    // Determines which words the student keeps getting wrong (now 1 or more times)
     function getWordsWithRepeatedErrors() {
         const problemWords = [];
         
         // 1. Check current week's words against the student's historical errors
         for (const item of spellingList) {
             const history = historicalErrors[item.word.toLowerCase()];
-            // A "problem word" is one with 2 or more errors
-            if (history && history.errors >= 2) { 
+            // Check for 1 or more errors
+            if (history && history.errors >= 1) { 
                 problemWords.push(item);
             }
         }
@@ -543,10 +550,21 @@
     }
     
     function updatePracticeListVisibility() {
+        // Must ensure we have the correct full spelling list for the current week selected in the dropdown
+        const currentWeekData = weeksData.find(w => w.id === weekSelectEl.value);
+        if (!currentWeekData) return;
+        
+        // Temporarily set spellingList to the full set of words to check historical errors against it
+        const originalSpellingList = spellingList;
+        spellingList = currentWeekData.words.slice();
+        
         const problemWords = getWordsWithRepeatedErrors();
         
+        // Restore spellingList to whatever it was before (e.g., if it was an empty list on reset)
+        spellingList = originalSpellingList;
+        
         if (problemWords.length > 0 && currentStudentName) {
-            practiceListInfoEl.textContent = `You have missed ${problemWords.length} words two or more times.`;
+            practiceListInfoEl.textContent = `You have missed ${problemWords.length} words one or more times.`;
             practiceTestSectionEl.style.display = 'flex';
         } else {
             practiceTestSectionEl.style.display = 'none';
@@ -555,17 +573,29 @@
     
     // Start the test using the list of problem words
     function startPracticeTest() {
-        const practiceWords = getWordsWithRepeatedErrors();
-        if (practiceWords.length === 0) {
-            alert('No repeated errors found to practice! Try a full test first.');
+        const currentWeekData = weeksData.find(w => w.id === weekSelectEl.value);
+        if (!currentWeekData) {
+            alert('Cannot load week data for practice test.');
             return;
         }
         
-        // Temporarily replace the spellingList with the practice words
+        // Use the selected week's full list to determine the practice words
+        spellingList = currentWeekData.words.slice();
+        const practiceWords = getWordsWithRepeatedErrors();
+        
+        if (practiceWords.length === 0) {
+            alert('Great job! No repeated errors found to practice in this week.');
+            // Re-load the correct week display after alert
+            loadWeek(currentWeekData); 
+            return;
+        }
+        
+        // Set the spellingList to ONLY the practice words
         spellingList = practiceWords;
         
-        // Update the display to show it's a practice test
-        weekLabelEl.textContent = `PRACTICE LIST (${currentWeek.label}) - ${spellingList.length} words`;
+        // Use a fallback label if currentWeek is somehow undefined (for robustness)
+        const weekLabel = currentWeek ? currentWeek.label : 'Current Week';
+        weekLabelEl.textContent = `PRACTICE LIST (${weekLabel}) - ${spellingList.length} words`;
         
         startTest(true); // Pass flag to startTest
     }
@@ -608,7 +638,7 @@
       inputEl.spellcheck = !disableSpellcheckEnabled; 
     });
     
-    // NEW: Name input listener
+    // Name input listener
     studentNameInputEl.addEventListener('input', checkNameAndLoad);
     
     // ======================
@@ -632,7 +662,7 @@
 
 
     // ======================
-    // Voice / audio (No changes here)
+    // Voice / audio
     // ======================
     let selectedUKVoice = null;
     function loadVoices() {
@@ -715,10 +745,10 @@
       weekDateEl.textContent = week.date || '';
       document.title = `Y6 Spelling Test — ${week.label || week.date || ''}`;
       
-      // NEW: When week changes, reload historical errors for the current user and update practice button
+      // When week changes, reload historical errors for the current user and update practice button
       checkNameAndLoad();
       
-      resetToStartScreen();
+      resetToStartScreen(); 
       buildProgressBar();
     }
     weekSelectEl.addEventListener('change', (e)=> loadWeekById(e.target.value));
@@ -839,7 +869,7 @@
       if (!typed) { messageEl.textContent = "⚠️ Please type a word first!"; return; }
       const isCorrect = typed.toLowerCase() === correct.toLowerCase();
       
-      // NEW: Update and save historical errors
+      // Update and save historical errors
       updateErrorHistory(correct, isCorrect);
       saveHistoricalErrors();
 
@@ -880,7 +910,7 @@
       // SET THE FINAL SCORE at the top of the results page
       finalScoreDisplayEl.textContent = `${score} / ${spellingList.length}`;
 
-      // NEW: Apply animation class to Woofs image
+      // Apply animation class to Woofs image
       woofsImageEl.classList.add('animate-woof');
 
       resultsTableBodyEl.innerHTML = '';
@@ -893,7 +923,7 @@
         row.insertCell().textContent = log.isCorrect ? 'Correct' : 'Incorrect';
       }
       
-      // NEW: Update practice list status after test
+      // Update practice list status after test
       updatePracticeListVisibility();
     }
 
@@ -909,8 +939,7 @@
       continueButtonEl.style.display = 'none';
       // Hide week selector on results
       weekBarEl.style.display = 'none';
-      // show Start Again and Menu
-      startAgainButtonEl.style.display = 'inline-block';
+      // show only Menu button
       menuButtonEl.style.display = 'inline-block';
     }
 
@@ -931,7 +960,7 @@
           if (originalWeek) spellingList = originalWeek.words.slice();
       }
 
-      // NEW: Remove animation class when starting test
+      // Remove animation class when starting test
       woofsImageEl.classList.remove('animate-woof');
 
       // hide week selector once the test starts
@@ -960,7 +989,7 @@
       const originalWeek = weeksData.find(w => w.id === weekSelectEl.value);
       if (originalWeek) spellingList = originalWeek.words.slice();
       
-      // NEW: Remove animation class when resetting
+      // Remove animation class when resetting
       woofsImageEl.classList.remove('animate-woof');
 
       currentWordIndex = 0;
@@ -977,20 +1006,18 @@
       weekBarEl.style.display = 'flex';
       // hide menu button while on start screen
       menuButtonEl.style.display = 'none';
-      // hide startAgain until needed
-      startAgainButtonEl.style.display = 'none';
       
-      // NEW: Reload state and update practice button visibility
+      // Reload state and update practice button visibility
       checkNameAndLoad();
     }
 
-    function resetAndStartImmediate() { resetToStartScreen(); setTimeout(startTest, 80); }
+    // Removed resetAndStartImmediate as it's no longer used
 
     // ======================
     // Event wiring
     // ======================
     startButtonEl.addEventListener('click', ()=> { startTest(); });
-    practiceButtonEl.addEventListener('click', ()=> { startPracticeTest(); }); // NEW: Practice button
+    practiceButtonEl.addEventListener('click', ()=> { startPracticeTest(); }); 
     
     // Say Again button now calls speakWord, which handles the auto-sentence toggle
     sayAgainButtonEl.addEventListener('click', ()=> {
@@ -1001,7 +1028,7 @@
     
     submitButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); checkSpelling(); });
     continueButtonEl.addEventListener('click', ()=> { if (soundEnabled) ensureAudioContext(); nextStep(); inputEl.focus(); });
-    startAgainButtonEl.addEventListener('click', resetAndStartImmediate);
+    // Removed startAgainButtonEl listener
     menuButtonEl.addEventListener('click', resetToStartScreen);
 
     document.addEventListener('keydown', (e) => {
@@ -1019,7 +1046,6 @@
     populateWeekSelect();
     checkNameAndLoad(); // Initial load of student data
     // initial toggle/button visibility
-    startAgainButtonEl.style.display = 'none';
     menuButtonEl.style.display = 'none';
     // Default: show sentence toggle on by default (persisted above)
     if (showSentenceToggleEl.checked) {
