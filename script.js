@@ -736,6 +736,7 @@ function handleSubmit() {
         continueButtonEl.style.display = 'block'; // Show continue button
         continueButtonEl.focus(); // Focus continue button
     }
+}
 
 function updateProgressBar(lastResult = null) {
     progressBarContainerEl.innerHTML = ''; // Clear existing segments
