@@ -575,7 +575,6 @@ function speak(text, rate = 1.0) {
         }
 
         // Further fallback: If still not found, try any English voice
-        if
           if (!selectedVoice) {
             selectedVoice = voices.find(voice => voice.lang.startsWith('en-'));
         }
