@@ -2,6 +2,7 @@
 // WEEKS DATA (easy to update)
 // ======================
 const weeksData = [
+  // EXISTING WEEKS
   {
     id: "2025-10-23",
     label: "Set 23 Oct — Test Fri 7 Nov 2025",
@@ -83,54 +84,56 @@ const weeksData = [
       { word: "inferring", sentence: "By observing the evidence, we are inferring the cause of the problem." }
     ]
   },
+
+  // NEW YEAR 3 & 4 SPELLINGS
   {
     id: "year3-ac",
     label: "Year 3 Spelling: A-C",
     date: "2024-03-08", // You can adjust this date
     words: [
-        { word: "accident", sentence: "The small **accident** scratched the car's paint." },
-        { word: "accidentally", sentence: "He **accidentally** spilled his juice on the table." },
-        { word: "actual", sentence: "What was the **actual** time of the show?" },
-        { word: "actually", sentence: "I thought it was easy, but it's **actually** quite hard." },
-        { word: "address", sentence: "Please write your name and **address** on the form." },
-        { word: "although", sentence: "**Although** it was raining, they still went for a walk." },
-        { word: "answer", sentence: "Can you **answer** this question for me?" },
-        { word: "appear", sentence: "The magician made a rabbit **appear** from his hat." },
-        { word: "arrive", sentence: "What time will the bus **arrive** at the station?" },
-        { word: "believe", sentence: "I **believe** you can achieve your dreams." },
-        { word: "bicycle", sentence: "She learned to ride her new **bicycle** without stabilisers." },
-        { word: "breath", sentence: "He held his **breath** underwater for a long time." },
-        { word: "breathe", sentence: "It's important to **breathe** deeply when you exercise." },
-        { word: "build", sentence: "They will **build** a new house next year." },
-        { word: "busy", sentence: "The shop was very **busy** on Saturday afternoon." },
-        { word: "business", sentence: "Running a bakery is a tasty **business**." },
-        { word: "calendar", sentence: "Check the **calendar** to see what day it is." },
-        { word: "caught", sentence: "The cat **caught** a mouse in the garden." }
+        { word: "accident", sentence: "The small accident scratched the car's paint." },
+        { word: "accidentally", sentence: "He accidentally spilled his juice on the table." },
+        { word: "actual", sentence: "What was the actual time of the show?" },
+        { word: "actually", sentence: "I thought it was easy, but it's actually quite hard." },
+        { word: "address", sentence: "Please write your name and address on the form." },
+        { word: "although", sentence: "Although it was raining, they still went for a walk." },
+        { word: "answer", sentence: "Can you answer this question for me?" },
+        { word: "appear", sentence: "The magician made a rabbit appear from his hat." },
+        { word: "arrive", sentence: "What time will the bus arrive at the station?" },
+        { word: "believe", sentence: "I believe you can achieve your dreams." },
+        { word: "bicycle", sentence: "She learned to ride her new bicycle without stabilisers." },
+        { word: "breath", sentence: "He held his breath underwater for a long time." },
+        { word: "breathe", sentence: "It's important to breathe deeply when you exercise." },
+        { word: "build", sentence: "They will build a new house next year." },
+        { word: "busy", sentence: "The shop was very busy on Saturday afternoon." },
+        { word: "business", sentence: "Running a bakery is a tasty business." },
+        { word: "calendar", sentence: "Check the calendar to see what day it is." },
+        { word: "caught", sentence: "The cat caught a mouse in the garden." }
     ]
-},
+  },
   {
     id: "year3-dh",
     label: "Year 3 Spelling: D-H",
     date: "2024-03-09",
     words: [
-        { word: "centre", sentence: "The bullseye is in the **centre** of the target." },
-        { word: "century", sentence: "A **century** is a period of one hundred years." },
-        { word: "certain", sentence: "Are you **certain** you locked the door?" },
-        { word: "circle", sentence: "Draw a perfect **circle** with a compass." },
-        { word: "complete", sentence: "You need to **complete** your homework before playing." },
-        { word: "consider", sentence: "Please **consider** my suggestion carefully." },
-        { word: "continue", sentence: "Don't stop, **continue** your excellent work." },
-        { word: "decide", sentence: "It's hard to **decide** what to have for dinner." },
-        { word: "describe", sentence: "Can you **describe** the new dog to me?" },
-        { word: "different", sentence: "They wore **different** coloured socks today." },
-        { word: "difficult", sentence: "This puzzle is quite **difficult** to solve." },
-        { word: "disappear", sentence: "The magician made the rabbit **disappear**." },
-        { word: "early", sentence: "We woke up **early** to watch the sunrise." },
-        { word: "earth", sentence: "The **Earth** revolves around the Sun." },
-        { word: "eight", sentence: "There are **eight** planets in our solar system." },
-        { word: "eighth", sentence: "He finished in **eighth** place in the race." },
-        { word: "enough", sentence: "Do you have **enough** money for the cinema?" },
-        { word: "exercise", sentence: "Daily **exercise** is good for your health." }
+        { word: "centre", sentence: "The bullseye is in the centre of the target." },
+        { word: "century", sentence: "A century is a period of one hundred years." },
+        { word: "certain", sentence: "Are you certain you locked the door?" },
+        { word: "circle", sentence: "Draw a perfect circle with a compass." },
+        { word: "complete", sentence: "You need to complete your homework before playing." },
+        { word: "consider", sentence: "Please consider my suggestion carefully." },
+        { word: "continue", sentence: "Don't stop, continue your excellent work." },
+        { word: "decide", sentence: "It's hard to decide what to have for dinner." },
+        { word: "describe", sentence: "Can you describe the new dog to me?" },
+        { word: "different", sentence: "They wore different coloured socks today." },
+        { word: "difficult", sentence: "This puzzle is quite difficult to solve." },
+        { word: "disappear", sentence: "The magician made the rabbit disappear." },
+        { word: "early", sentence: "We woke up early to watch the sunrise." },
+        { word: "earth", sentence: "The Earth revolves around the Sun." },
+        { word: "eight", sentence: "There are eight planets in our solar system." },
+        { word: "eighth", sentence: "He finished in eighth place in the race." },
+        { word: "enough", sentence: "Do you have enough money for the cinema?" },
+        { word: "exercise", sentence: "Daily exercise is good for your health." }
     ]
 },
   {
@@ -138,24 +141,24 @@ const weeksData = [
     label: "Year 3 Spelling: E-G",
     date: "2024-03-10",
     words: [
-        { word: "experience", sentence: "He gained a lot of **experience** from his first job." },
-        { word: "experiment", sentence: "We conducted a science **experiment** in class." },
-        { word: "extreme", sentence: "The weather was at an **extreme** cold today." },
-        { word: "famous", sentence: "The **famous** singer performed at the concert." },
-        { word: "favourite", sentence: "What is your **favourite** animal at the zoo?" },
-        { word: "February", sentence: "**February** is the shortest month of the year." },
-        { word: "fruit", sentence: "Apples and bananas are healthy **fruit**." },
-        { word: "grammar", sentence: "Learning proper **grammar** helps you write well." },
-        { word: "group", sentence: "The class worked in a small **group**." },
-        { word: "guard", sentence: "A security **guard** protected the museum." },
-        { word: "guide", sentence: "Our tour **guide** showed us around the city." },
-        { word: "heard", sentence: "I **heard** a strange noise outside last night." },
-        { word: "heart", sentence: "Your **heart** pumps blood around your body." },
-        { word: "height", sentence: "Measure your **height** against the wall." },
-        { word: "history", sentence: "We learned about ancient Roman **history**." },
-        { word: "imagine", sentence: "Can you **imagine** a world without colour?" },
-        { word: "increase", sentence: "We need to **increase** our efforts to finish on time." },
-        { word: "important", sentence: "It's **important** to listen carefully." }
+        { word: "experience", sentence: "He gained a lot of experience from his first job." },
+        { word: "experiment", sentence: "We conducted a science experiment in class." },
+        { word: "extreme", sentence: "The weather was at an extreme cold today." },
+        { word: "famous", sentence: "The famous singer performed at the concert." },
+        { word: "favourite", sentence: "What is your favourite animal at the zoo?" },
+        { word: "February", sentence: "February is the shortest month of the year." },
+        { word: "fruit", sentence: "Apples and bananas are healthy fruit." },
+        { word: "grammar", sentence: "Learning proper grammar helps you write well." },
+        { word: "group", sentence: "The class worked in a small group." },
+        { word: "guard", sentence: "A security guard protected the museum." },
+        { word: "guide", sentence: "Our tour guide showed us around the city." },
+        { word: "heard", sentence: "I heard a strange noise outside last night." },
+        { word: "heart", sentence: "Your heart pumps blood around your body." },
+        { word: "height", sentence: "Measure your height against the wall." },
+        { word: "history", sentence: "We learned about ancient Roman history." },
+        { word: "imagine", sentence: "Can you imagine a world without colour?" },
+        { word: "increase", sentence: "We need to increase our efforts to finish on time." },
+        { word: "important", sentence: "It's important to listen carefully." }
     ]
 },
   {
@@ -163,23 +166,23 @@ const weeksData = [
     label: "Year 3 Spelling: I-O",
     date: "2024-03-11",
     words: [
-        { word: "interest", sentence: "He showed great **interest** in learning to play guitar." },
-        { word: "island", sentence: "The desert **island** was surrounded by clear blue water." },
-        { word: "knowledge", sentence: "Reading books expands your **knowledge**." },
-        { word: "learn", sentence: "What new skill do you want to **learn**?" },
-        { word: "length", sentence: "Measure the **length** of the table with a ruler." },
-        { word: "library", sentence: "I borrowed a book from the local **library**." },
-        { word: "material", sentence: "The dress was made from a soft cotton **material**." },
-        { word: "medicine", sentence: "The doctor prescribed some **medicine** for his cough." },
-        { word: "mention", sentence: "Did I **mention** that I won the competition?" },
-        { word: "minute", sentence: "Wait just a **minute**, I'll be right there." },
-        { word: "natural", sentence: "The birds sang a **natural** and beautiful song." },
-        { word: "naughty", sentence: "The **naughty** puppy chewed on the shoe." },
-        { word: "notice", sentence: "Did you **notice** the new painting on the wall?" },
-        { word: "occasion", sentence: "It was a special **occasion** when the queen visited." },
-        { word: "often", sentence: "How **often** do you visit your grandparents?" },
-        { word: "opposite", sentence: "The bank is **opposite** the post office." },
-        { word: "ordinary", sentence: "It was just an **ordinary** day at school." }
+        { word: "interest", sentence: "He showed great interest in learning to play guitar." },
+        { word: "island", sentence: "The desert island was surrounded by clear blue water." },
+        { word: "knowledge", sentence: "Reading books expands your knowledge." },
+        { word: "learn", sentence: "What new skill do you want to learn?" },
+        { word: "length", sentence: "Measure the length of the table with a ruler." },
+        { word: "library", sentence: "I borrowed a book from the local library." },
+        { word: "material", sentence: "The dress was made from a soft cotton material." },
+        { word: "medicine", sentence: "The doctor prescribed some medicine for his cough." },
+        { word: "mention", sentence: "Did I mention that I won the competition?" },
+        { word: "minute", sentence: "Wait just a minute, I'll be right there." },
+        { word: "natural", sentence: "The birds sang a natural and beautiful song." },
+        { word: "naughty", sentence: "The naughty puppy chewed on the shoe." },
+        { word: "notice", sentence: "Did you notice the new painting on the wall?" },
+        { word: "occasion", sentence: "It was a special occasion when the queen visited." },
+        { word: "often", sentence: "How often do you visit your grandparents?" },
+        { word: "opposite", sentence: "The bank is opposite the post office." },
+        { word: "ordinary", sentence: "It was just an ordinary day at school." }
     ]
 },
   {
@@ -187,22 +190,22 @@ const weeksData = [
     label: "Year 3 Spelling: P-R",
     date: "2024-03-12",
     words: [
-        { word: "particular", sentence: "Do you have a **particular** favourite colour?" },
-        { word: "peculiar", sentence: "The cat had a **peculiar** habit of watching TV." },
-        { word: "perhaps", sentence: "**Perhaps** we can go to the park later." },
-        { word: "popular", sentence: "Football is a very **popular** sport." },
-        { word: "position", sentence: "Find your **position** on the starting line." },
-        { word: "possess", sentence: "Do you **possess** any special talents?" },
-        { word: "possible", sentence: "It is **possible** to fly to the moon." },
-        { word: "potatoes", sentence: "We are having roast **potatoes** for dinner." },
-        { word: "pressure", sentence: "The deep sea diver felt the immense **pressure** of the water." },
-        { word: "probably", sentence: "It will **probably** rain tomorrow." },
-        { word: "promise", sentence: "She made a **promise** to always tell the truth." },
-        { word: "purpose", sentence: "What is the **purpose** of this machine?" },
-        { word: "quarter", sentence: "I ate a **quarter** of the apple pie." },
-        { word: "question", sentence: "He asked a very difficult **question**." },
-        { word: "regular", sentence: "He follows a **regular** routine every morning." },
-        { word: "reign", sentence: "The queen's **reign** lasted for many years." }
+        { word: "particular", sentence: "Do you have a particular favourite colour?" },
+        { word: "peculiar", sentence: "The cat had a peculiar habit of watching TV." },
+        { word: "perhaps", sentence: "Perhaps we can go to the park later." },
+        { word: "popular", sentence: "Football is a very popular sport." },
+        { word: "position", sentence: "Find your position on the starting line." },
+        { word: "possess", sentence: "Do you possess any special talents?" },
+        { word: "possible", sentence: "It is possible to fly to the moon." },
+        { word: "potatoes", sentence: "We are having roast potatoes for dinner." },
+        { word: "pressure", sentence: "The deep sea diver felt the immense pressure of the water." },
+        { word: "probably", sentence: "It will probably rain tomorrow." },
+        { word: "promise", sentence: "She made a promise to always tell the truth." },
+        { word: "purpose", sentence: "What is the purpose of this machine?" },
+        { word: "quarter", sentence: "I ate a quarter of the apple pie." },
+        { word: "question", sentence: "He asked a very difficult question." },
+        { word: "regular", sentence: "He follows a regular routine every morning." },
+        { word: "reign", sentence: "The queen's reign lasted for many years." }
     ]
 },
   {
@@ -210,25 +213,25 @@ const weeksData = [
     label: "Year 3 Spelling: S-W",
     date: "2024-03-13",
     words: [
-        { word: "remember", sentence: "Can you **remember** what we learned yesterday?" },
-        { word: "sentence", sentence: "Every **sentence** starts with a capital letter." },
-        { word: "separate", sentence: "Please **separate** the paper from the plastic for recycling." },
-        { word: "special", sentence: "Today is a very **special** day." },
-        { word: "straight", sentence: "Draw a **straight** line with a ruler." },
-        { word: "strange", sentence: "I heard a **strange** noise coming from the attic." },
-        { word: "strength", sentence: "He showed great **strength** by lifting the heavy box." },
-        { word: "suppose", sentence: "I **suppose** we could go to the park if the rain stops." },
-        { word: "surprise", sentence: "The birthday party was a big **surprise**." },
-        { word: "therefore", sentence: "He studied hard, **therefore** he passed the exam." },
-        { word: "thought", sentence: "I **thought** you were coming to the party." },
-        { word: "through", sentence: "We walked **through** the long tunnel." },
-        { word: "variety", sentence: "The shop sells a **variety** of sweets." }, // 'together' was not found on the image
-        { word: "various", sentence: "There were **various** colours of balloons at the party." },
-        { word: "weight", sentence: "What is the **weight** of this package?" },
-        { word: "woman", sentence: "A kind **woman** helped the lost child." },
-        { word: "women", sentence: "The two **women** were talking happily." }
+        { word: "remember", sentence: "Can you remember what we learned yesterday?" },
+        { word: "sentence", sentence: "Every sentence starts with a capital letter." },
+        { word: "separate", sentence: "Please separate the paper from the plastic for recycling." },
+        { word: "special", sentence: "Today is a very special day." },
+        { word: "straight", sentence: "Draw a straight line with a ruler." },
+        { word: "strange", sentence: "I heard a strange noise coming from the attic." },
+        { word: "strength", sentence: "He showed great strength by lifting the heavy box." },
+        { word: "suppose", sentence: "I suppose we could go to the park if the rain stops." },
+        { word: "surprise", sentence: "The birthday party was a big surprise." },
+        { word: "therefore", sentence: "He studied hard, therefore he passed the exam." },
+        { word: "thought", sentence: "I thought you were coming to the party." },
+        { word: "through", sentence: "We walked through the long tunnel." },
+        { word: "variety", sentence: "The shop sells a variety of sweets." },
+        { word: "various", sentence: "There were various colours of balloons at the party." },
+        { word: "weight", sentence: "What is the weight of this package?" },
+        { word: "woman", sentence: "A kind woman helped the lost child." },
+        { word: "women", sentence: "The two women were talking happily." }
     ]
-}
+  }
 ];
 
 // ----------------------
@@ -572,7 +575,8 @@ function speak(text, rate = 1.0) {
         }
 
         // Further fallback: If still not found, try any English voice
-        if (!selectedVoice) {
+        if
+          if (!selectedVoice) {
             selectedVoice = voices.find(voice => voice.lang.startsWith('en-'));
         }
         
@@ -867,4 +871,32 @@ autoSpeakSentenceToggleEl.addEventListener('change', () => {
     autoSpeakSentenceLabelEl.textContent = autoSpeakSentenceEnabled ? 'Speak word then sentence (ON)' : 'Speak word then sentence (OFF)';
 });
 
-disableSpellcheckToggleEl.addEventListener('change',
+disableSpellcheckToggleEl.addEventListener('change', () => {
+    disableSpellcheckEnabled = disableSpellcheckToggleEl.checked;
+    localStorage.setItem(DISABLE_SPELLCHECK_KEY, disableSpellcheckEnabled);
+    disableSpellcheckLabelEl.textContent = disableSpellcheckEnabled ? 'Disable browser spellcheck (ON)' : 'Disable browser spellcheck (OFF)';
+    inputEl.spellcheck = !disableSpellcheckEnabled; // Apply setting to input
+});
+
+// Student Name Input Events
+studentNameInputEl.addEventListener('input', (event) => {
+    const name = event.target.value.trim();
+    if (name) {
+        currentStudentName = name;
+        currentStudentDisplayEl.textContent = `(Currently: ${name})`;
+        loadStudentHistory(name);
+        checkPracticeTestNeeded(name, weekSelectEl.value); // Re-check practice list for this student/week
+    } else {
+        currentStudentName = '';
+        currentStudentDisplayEl.textContent = '';
+        historicalErrors = {}; // Clear history display if no name
+        hidePracticeTestSection();
+    }
+});
+
+studentNameInputEl.addEventListener('blur', () => {
+    const name = studentNameInputEl.value.trim();
+    if (name) {
+        saveKnownStudent(name); // Save name on blur
+    }
+});
