@@ -95,7 +95,8 @@
     #nameInputContainer{display:flex;flex-direction:column;gap:5px;align-items:center;width:80%;max-width:300px;margin-bottom:10px;}
     /* Updated name input styling for datalist */
     #studentNameInput{padding:8px 10px;border-radius:6px;border:1px solid #ccc;width:100%;text-align:center;}
-    #currentStudentDisplay{font-weight:700;color:var(--accent);margin:0;min-height:20px;}
+    /* Fix: Removed default content from HTML, now set by JS */
+    #currentStudentDisplay{font-weight:700;color:var(--accent);margin:0;min-height:20px;} 
     #practiceTestSection{
         display: none;
         flex-direction: column;
@@ -229,9 +230,9 @@
 
     <div id="startScreen" role="region" aria-label="Start screen">
         <div id="nameInputContainer">
-            <label for="studentNameInput">Choose or Enter Your Name/ID to Save Progress:</label>
+            <label for="studentNameInput">Enter UserName to Save Progress:</label>
             <input id="studentNameInput" list="knownStudentsList" type="text" placeholder="e.g., John Doe" autocomplete="name" />
-            <datalist id="knownStudentsList"></datalist> <p id="currentStudentDisplay">Name not set.</p>
+            <datalist id="knownStudentsList"></datalist> <p id="currentStudentDisplay"></p>
         </div>
         
       <p id="startBlurb">Press Start to begin the spelling test for the selected week.</p>
@@ -451,6 +452,10 @@
     const lastUsedName = localStorage.getItem(LAST_NAME_KEY);
     if (lastUsedName) {
         studentNameInputEl.value = lastUsedName;
+        // FIXED: Explicitly set the correct status on load to prevent 'Name not set.' flash
+        currentStudentDisplayEl.textContent = `Progress saved for: ${lastUsedName}`; 
+    } else {
+        currentStudentDisplayEl.textContent = 'Name not set.';
     }
 
     // Apply initial state to toggles
@@ -548,7 +553,7 @@
             historicalErrors = {};
         }
         
-        // FIX: Update display text
+        // Update display text (safe redundancy with init block)
         currentStudentDisplayEl.textContent = `Progress saved for: ${name}`;
         
         updatePracticeListVisibility();
@@ -700,10 +705,10 @@
       inputEl.spellcheck = !disableSpellcheckEnabled; 
     });
     
-    // Name input listener
+    // Name input listener (calls checkNameAndLoad on every change/selection)
     studentNameInputEl.addEventListener('input', checkNameAndLoad);
-    studentNameInputEl.addEventListener('change', checkNameAndLoad); // Also check on change (important for datalist selection)
-    studentNameInputEl.addEventListener('blur', checkNameAndLoad); // Also check on blur
+    studentNameInputEl.addEventListener('change', checkNameAndLoad); 
+    studentNameInputEl.addEventListener('blur', checkNameAndLoad); 
 
 
     // ======================
@@ -1107,9 +1112,9 @@
     // ======================
     // Initialization
     // ======================
-    loadKnownStudents(); // NEW: Load the list of known students
+    loadKnownStudents(); // Load the list of known students and populate the datalist
     populateWeekSelect();
-    checkNameAndLoad(); // FIX: Call this immediately to update the display for the pre-populated name
+    checkNameAndLoad(); // Final check to ensure button state and practice section visibility are correct
     
     // initial toggle/button visibility
     menuButtonEl.style.display = 'none';
