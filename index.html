@@ -9,8 +9,19 @@
     body{font-family:Arial,Helvetica,sans-serif;background:#f0f8ff;padding:20px;margin:0}
     #container{max-width:820px;margin:0 auto;background:#fff;padding:28px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.08);position:relative}
     h1{color:var(--accent);margin:0 0 10px; text-align: center;}
+    
     /* corner image */
-    .corner-woofs{position:absolute;top:12px;right:12px;width:64px;height:auto;pointer-events:none}
+    .corner-woofs{position:absolute;top:12px;right:12px;width:64px;height:auto;pointer-events:none; transition: transform 0.15s;} /* Added transition for smooth reset */
+
+    /* NEW ANIMATION STYLES */
+    @keyframes woofPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1) rotate(-3deg); }
+        100% { transform: scale(1); }
+    }
+    .corner-woofs.animate-woof {
+        animation: woofPulse 1.5s ease-in-out 2; /* Bounces twice */
+    }
     
     /* Settings Icon */
     .top-controls{
@@ -136,7 +147,7 @@
     #message{margin-top:14px;text-align:center;font-weight:700;min-height:26px}
     /* results */
     #results{margin-top:22px;text-align:left;display:none}
-    /* NEW STYLE FOR FINAL SCORE DISPLAY */
+    /* STYLE FOR FINAL SCORE DISPLAY */
     #finalScoreDisplay{
         color: var(--ok); 
         font-size: 1.8rem;
@@ -350,7 +361,7 @@
     const continueButtonEl = document.getElementById('continueButton');
 
     const resultsEl = document.getElementById('results');
-    const finalScoreDisplayEl = document.getElementById('finalScoreDisplay'); // NEW DOM Reference
+    const finalScoreDisplayEl = document.getElementById('finalScoreDisplay'); 
     const resultsTableBodyEl = document.querySelector('#resultsTable tbody');
     const startAgainButtonEl = document.getElementById('startAgainButton');
     const menuButtonEl = document.getElementById('menuButton');
@@ -359,6 +370,9 @@
     const settingsIconEl = document.getElementById('settingsIcon');
     const settingsPanelEl = document.getElementById('settingsPanel');
     const closeSettingsButtonEl = document.getElementById('closeSettingsButton');
+    
+    // Woofs Image Ref (NEW)
+    const woofsImageEl = document.querySelector('.corner-woofs');
 
     // toggles
     const soundToggleEl = document.getElementById('soundToggle');
@@ -685,13 +699,16 @@
       }
     }
 
-    // UPDATED to show score at the top
+    // UPDATED to show score at the top and add animation
     function displayResults(){
       testInterfaceEl.style.display = 'none';
       resultsEl.style.display = 'block';
       
       // SET THE FINAL SCORE at the top of the results page
       finalScoreDisplayEl.textContent = `${score} / ${spellingList.length}`;
+
+      // NEW: Apply animation class to Woofs image
+      woofsImageEl.classList.add('animate-woof');
 
       resultsTableBodyEl.innerHTML = '';
       for (const log of resultsLog) {
@@ -707,7 +724,7 @@
     function finishTest() {
       progressEl.textContent = "TEST FINISHED!";
       scoreEl.textContent = `Final Score: ${score} / ${spellingList.length}`;
-      messageEl.textContent = `🎉 Test Complete!`; // Simplified message
+      messageEl.textContent = `🎉 Test Complete!`; 
       updateScoreAndProgress();
       displayResults();
       // hide buttons while on results
@@ -724,6 +741,10 @@
     // start/reset helpers
     function startTest() {
       if (soundEnabled) ensureAudioContext();
+      
+      // NEW: Remove animation class when starting test
+      woofsImageEl.classList.remove('animate-woof');
+
       // hide week selector once the test starts
       weekBarEl.style.display = 'none';
       // restore UI
@@ -744,6 +765,9 @@
     }
 
     function resetToStartScreen() {
+      // NEW: Remove animation class when resetting
+      woofsImageEl.classList.remove('animate-woof');
+
       currentWordIndex = 0;
       score = 0;
       resultsLog = [];
