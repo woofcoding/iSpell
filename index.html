@@ -247,92 +247,241 @@
   </div>
 
   <script>
-    // ======================
-    // WEEKS DATA (easy to update)
-    // ======================
-    const weeksData = [
-      {
-        id: "2025-10-23",
-        label: "Set 23 Oct — Test Fri 7 Nov 2025",
-        date: "2025-10-23",
-        words: [
-          { word: "rhyme", sentence: "The children learned a funny rhyme to help remember the spelling." },
-          { word: "secretary", sentence: "The secretary typed up the meeting minutes quickly." },
-          { word: "sincere", sentence: "He made a sincere apology after accidentally breaking the vase." },
-          { word: "sufficient", sentence: "We have sufficient pencils for everyone in the class." },
-          { word: "system", sentence: "The school's heating system was repaired over the holidays." },
-          { word: "rhythm", sentence: "She clapped the rhythm of the song perfectly in music class." },
-          { word: "shoulder", sentence: "He carried the bag on his shoulder as he walked home." },
-          { word: "soldier", sentence: "The soldier marched bravely in the parade." },
-          { word: "suggest", sentence: "May I suggest a different book for the class reading?" },
-          { word: "temperature", sentence: "The nurse took my temperature before I returned to class." },
-          { word: "sacrifice", sentence: "They made a small sacrifice of their break time to finish the experiment." },
-          { word: "signature", sentence: "Please write your signature at the bottom of the form." },
-          { word: "stomach", sentence: "Her stomach rumbled loudly during the quiet assembly." },
-          { word: "symbol", sentence: "The dove is often used as a symbol of peace." },
-          { word: "thorough", sentence: "Make a thorough check of your answers before handing them in." },
-          { word: "twelfth", sentence: "This is the twelfth question on the worksheet." },
-          { word: "variety", sentence: "The market sold a variety of fresh fruits and snacks." },
-          { word: "vegetable", sentence: "He chose one vegetable from the tray for his soup." },
-          { word: "vehicle", sentence: "A large vehicle delivered the new desks to the school." },
-          { word: "sincerely", sentence: "She finished the letter with 'Yours sincerely' and signed her name." }
-        ]
-      },
-      {
-        id: "2025-11-07",
-        label: "Set 7 Nov — Test Fri 14 Nov 2025",
-        date: "2025-11-07",
-        words: [
-          { word: "observant", sentence: "The traffic warden was very observant and spotted the illegal parking." },
-          { word: "hesitant", sentence: "She was hesitant to answer the question, taking a long pause first." },
-          { word: "tolerance", sentence: "The garden grows well because of its high tolerance to frost." },
-          { word: "decent", sentence: "I hope you have a decent amount of money saved for the trip." },
-          { word: "frequency", sentence: "The bus runs at a high frequency, arriving every fifteen minutes." },
-          { word: "observance", sentence: "The observance of rules is critical for safety." },
-          { word: "hesitancy", sentence: "His slight hesitancy gave the opposition time to think." },
-          { word: "innocent", sentence: "The court decided the boy was innocent of the crime." },
-          { word: "decency", sentence: "The children were taught common decency, like saying please and thank you." },
-          { word: "confident", sentence: "She felt confident in her ability to pass the difficult exam." },
-          { word: "expectant", sentence: "The whole crowd was expectant as the singer walked onto the stage." },
-          { word: "tolerant", sentence: "We must be tolerant of other people's views, even if we disagree." },
-          { word: "innocence", sentence: "He maintained his innocence throughout the long trial." },
-          { word: "frequent", sentence: "Frequent visits to the library improved her reading skills." },
-          { word: "confidence", sentence: "Winning the tournament boosted the team's confidence." },
-          { word: "assistant", sentence: "The shop assistant helped the customer find the correct size." },
-          { word: "assistance", sentence: "The old man requested assistance with his heavy bags." },
-          { word: "obedient", sentence: "The soldier was obedient and followed all the orders given." },
-          { word: "independent", sentence: "She became independent after moving out of her family home." },
-          { word: "independence", sentence: "The country celebrated its day of independence from foreign rule." }
-        ]
-      },
-      {
-        id: "2025-11-28",
-        label: "Set 20 Nov — Test Fri 28 Nov 2025",
-        date: "2025-11-28",
-        words: [
-          { word: "referring", sentence: "The teacher was referring to the page numbers in the book." },
-          { word: "preferring", sentence: "She was preferring to stay inside rather than go out in the rain." },
-          { word: "transferred", sentence: "The money was transferred from my savings account to my current account." },
-          { word: "preference", sentence: "Do you have a preference for red or blue?" },
-          { word: "suffering", sentence: "The injured dog was suffering from a broken leg." },
-          { word: "referred", sentence: "The doctor referred the patient to a specialist." },
-          { word: "preferred", sentence: "For the party, I would have preferred a chocolate cake." },
-          { word: "reference", sentence: "Always check your work against a reliable reference source." },
-          { word: "transference", sentence: "The emotional transference of feelings is complex." },
-          { word: "differing", sentence: "They had differing opinions on which film to watch." },
-          { word: "referral", sentence: "He got the new job through a personal referral." },
-          { word: "transferring", sentence: "They are transferring the files to a new computer system." },
-          { word: "referee", sentence: "The referee blew the whistle to end the football match." },
-          { word: "different", sentence: "I chose a completely different style of painting this time." },
-          { word: "inferred", sentence: "From his silence, she inferred that he was upset." },
-          { word: "suffered", sentence: "The company suffered a great loss during the recession." },
-          { word: "conferring", sentence: "The judges were conferring quietly before announcing the winner." },
-          { word: "offered", sentence: "The café offered a free cookie with every hot drink." },
-          { word: "offering", sentence: "He was offering to help his neighbour move furniture." },
-          { word: "inferring", sentence: "By observing the evidence, we are inferring the cause of the problem." }
-        ]
-      }
-    ];
+   // ======================
+// WEEKS DATA (easy to update)
+// ======================
+const weeksData = [
+  // EXISTING WEEKS
+  {
+    id: "2025-10-23",
+    label: "Set 23 Oct — Test Fri 7 Nov 2025",
+    date: "2025-10-23",
+    words: [
+      { word: "rhyme", sentence: "The children learned a funny rhyme to help remember the spelling." },
+      { word: "secretary", sentence: "The secretary typed up the meeting minutes quickly." },
+      { word: "sincere", sentence: "He made a sincere apology after accidentally breaking the vase." },
+      { word: "sufficient", sentence: "We have sufficient pencils for everyone in the class." },
+      { word: "system", sentence: "The school's heating system was repaired over the holidays." },
+      { word: "rhythm", sentence: "She clapped the rhythm of the song perfectly in music class." },
+      { word: "shoulder", sentence: "He carried the bag on his shoulder as he walked home." },
+      { word: "soldier", sentence: "The soldier marched bravely in the parade." },
+      { word: "suggest", sentence: "May I suggest a different book for the class reading?" },
+      { word: "temperature", sentence: "The nurse took my temperature before I returned to class." },
+      { word: "sacrifice", sentence: "They made a small sacrifice of their break time to finish the experiment." },
+      { word: "signature", sentence: "Please write your signature at the bottom of the form." },
+      { word: "stomach", sentence: "Her stomach rumbled loudly during the quiet assembly." },
+      { word: "symbol", sentence: "The dove is often used as a symbol of peace." },
+      { word: "thorough", sentence: "Make a thorough check of your answers before handing them in." },
+      { word: "twelfth", sentence: "This is the twelfth question on the worksheet." },
+      { word: "variety", sentence: "The market sold a variety of fresh fruits and snacks." },
+      { word: "vegetable", sentence: "He chose one vegetable from the tray for his soup." },
+      { word: "vehicle", sentence: "A large vehicle delivered the new desks to the school." },
+      { word: "sincerely", sentence: "She finished the letter with 'Yours sincerely' and signed her name." }
+    ]
+  },
+  {
+    id: "2025-11-07",
+    label: "Set 7 Nov — Test Fri 14 Nov 2025",
+    date: "2025-11-07",
+    words: [
+      { word: "observant", sentence: "The traffic warden was very observant and spotted the illegal parking." },
+      { word: "hesitant", sentence: "She was hesitant to answer the question, taking a long pause first." },
+      { word: "tolerance", sentence: "The garden grows well because of its high tolerance to frost." },
+      { word: "decent", sentence: "I hope you have a decent amount of money saved for the trip." },
+      { word: "frequency", sentence: "The bus runs at a high frequency, arriving every fifteen minutes." },
+      { word: "observance", sentence: "The observance of rules is critical for safety." },
+      { word: "hesitancy", sentence: "His slight hesitancy gave the opposition time to think." },
+      { word: "innocent", sentence: "The court decided the boy was innocent of the crime." },
+      { word: "decency", sentence: "The children were taught common decency, like saying please and thank you." },
+      { word: "confident", sentence: "She felt confident in her ability to pass the difficult exam." },
+      { word: "expectant", sentence: "The whole crowd was expectant as the singer walked onto the stage." },
+      { word: "tolerant", sentence: "We must be tolerant of other people's views, even if we disagree." },
+      { word: "innocence", sentence: "He maintained his innocence throughout the long trial." },
+      { word: "frequent", sentence: "Frequent visits to the library improved her reading skills." },
+      { word: "confidence", sentence: "Winning the tournament boosted the team's confidence." },
+      { word: "assistant", sentence: "The shop assistant helped the customer find the correct size." },
+      { word: "assistance", sentence: "The old man requested assistance with his heavy bags." },
+      { word: "obedient", sentence: "The soldier was obedient and followed all the orders given." },
+      { word: "independent", sentence: "She became independent after moving out of her family home." },
+      { word: "independence", sentence: "The country celebrated its day of independence from foreign rule." }
+    ]
+  },
+  {
+    id: "2025-11-28",
+    label: "Set 20 Nov — Test Fri 28 Nov 2025",
+    date: "2025-11-28",
+    words: [
+      { word: "referring", sentence: "The teacher was referring to the page numbers in the book." },
+      { word: "preferring", sentence: "She was preferring to stay inside rather than go out in the rain." },
+      { word: "transferred", sentence: "The money was transferred from my savings account to my current account." },
+      { word: "preference", sentence: "Do you have a preference for red or blue?" },
+      { word: "suffering", sentence: "The injured dog was suffering from a broken leg." },
+      { word: "referred", sentence: "The doctor referred the patient to a specialist." },
+      { word: "preferred", sentence: "For the party, I would have preferred a chocolate cake." },
+      { word: "reference", sentence: "Always check your work against a reliable reference source." },
+      { word: "transference", sentence: "The emotional transference of feelings is complex." },
+      { word: "differing", sentence: "They had differing opinions on which film to watch." },
+      { word: "referral", sentence: "He got the new job through a personal referral." },
+      { word: "transferring", sentence: "They are transferring the files to a new computer system." },
+      { word: "referee", sentence: "The referee blew the whistle to end the football match." },
+      { word: "different", sentence: "I chose a completely different style of painting this time." },
+      { word: "inferred", sentence: "From his silence, she inferred that he was upset." },
+      { word: "suffered", sentence: "The company suffered a great loss during the recession." },
+      { word: "conferring", sentence: "The judges were conferring quietly before announcing the winner." },
+      { word: "offered", sentence: "The café offered a free cookie with every hot drink." },
+      { word: "offering", sentence: "He was offering to help his neighbour move furniture." },
+      { word: "inferring", sentence: "By observing the evidence, we are inferring the cause of the problem." }
+    ]
+  },
+
+  // NEW YEAR 3 & 4 SPELLINGS
+  {
+    id: "year3-ac",
+    label: "Year 3 Spelling: A-C",
+    date: "2024-03-08", // You can adjust this date
+    words: [
+        { word: "accident", sentence: "The small **accident** scratched the car's paint." },
+        { word: "accidentally", sentence: "He **accidentally** spilled his juice on the table." },
+        { word: "actual", sentence: "What was the **actual** time of the show?" },
+        { word: "actually", sentence: "I thought it was easy, but it's **actually** quite hard." },
+        { word: "address", sentence: "Please write your name and **address** on the form." },
+        { word: "although", sentence: "**Although** it was raining, they still went for a walk." },
+        { word: "answer", sentence: "Can you **answer** this question for me?" },
+        { word: "appear", sentence: "The magician made a rabbit **appear** from his hat." },
+        { word: "arrive", sentence: "What time will the bus **arrive** at the station?" },
+        { word: "believe", sentence: "I **believe** you can achieve your dreams." },
+        { word: "bicycle", sentence: "She learned to ride her new **bicycle** without stabilisers." },
+        { word: "breath", sentence: "He held his **breath** underwater for a long time." },
+        { word: "breathe", sentence: "It's important to **breathe** deeply when you exercise." },
+        { word: "build", sentence: "They will **build** a new house next year." },
+        { word: "busy", sentence: "The shop was very **busy** on Saturday afternoon." },
+        { word: "business", sentence: "Running a bakery is a tasty **business**." },
+        { word: "calendar", sentence: "Check the **calendar** to see what day it is." },
+        { word: "caught", sentence: "The cat **caught** a mouse in the garden." }
+    ]
+  },
+  {
+    id: "year3-dh",
+    label: "Year 3 Spelling: D-H",
+    date: "2024-03-09",
+    words: [
+        { word: "centre", sentence: "The bullseye is in the **centre** of the target." },
+        { word: "century", sentence: "A **century** is a period of one hundred years." },
+        { word: "certain", sentence: "Are you **certain** you locked the door?" },
+        { word: "circle", sentence: "Draw a perfect **circle** with a compass." },
+        { word: "complete", sentence: "You need to **complete** your homework before playing." },
+        { word: "consider", sentence: "Please **consider** my suggestion carefully." },
+        { word: "continue", sentence: "Don't stop, **continue** your excellent work." },
+        { word: "decide", sentence: "It's hard to **decide** what to have for dinner." },
+        { word: "describe", sentence: "Can you **describe** the new dog to me?" },
+        { word: "different", sentence: "They wore **different** coloured socks today." },
+        { word: "difficult", sentence: "This puzzle is quite **difficult** to solve." },
+        { word: "disappear", sentence: "The magician made the rabbit **disappear**." },
+        { word: "early", sentence: "We woke up **early** to watch the sunrise." },
+        { word: "earth", sentence: "The **Earth** revolves around the Sun." },
+        { word: "eight", sentence: "There are **eight** planets in our solar system." },
+        { word: "eighth", sentence: "He finished in **eighth** place in the race." },
+        { word: "enough", sentence: "Do you have **enough** money for the cinema?" },
+        { word: "exercise", sentence: "Daily **exercise** is good for your health." }
+    ]
+},
+  {
+    id: "year3-eg",
+    label: "Year 3 Spelling: E-G",
+    date: "2024-03-10",
+    words: [
+        { word: "experience", sentence: "He gained a lot of **experience** from his first job." },
+        { word: "experiment", sentence: "We conducted a science **experiment** in class." },
+        { word: "extreme", sentence: "The weather was at an **extreme** cold today." },
+        { word: "famous", sentence: "The **famous** singer performed at the concert." },
+        { word: "favourite", sentence: "What is your **favourite** animal at the zoo?" },
+        { word: "February", sentence: "**February** is the shortest month of the year." },
+        { word: "fruit", sentence: "Apples and bananas are healthy **fruit**." },
+        { word: "grammar", sentence: "Learning proper **grammar** helps you write well." },
+        { word: "group", sentence: "The class worked in a small **group**." },
+        { word: "guard", sentence: "A security **guard** protected the museum." },
+        { word: "guide", sentence: "Our tour **guide** showed us around the city." },
+        { word: "heard", sentence: "I **heard** a strange noise outside last night." },
+        { word: "heart", sentence: "Your **heart** pumps blood around your body." },
+        { word: "height", sentence: "Measure your **height** against the wall." },
+        { word: "history", sentence: "We learned about ancient Roman **history**." },
+        { word: "imagine", sentence: "Can you **imagine** a world without colour?" },
+        { word: "increase", sentence: "We need to **increase** our efforts to finish on time." },
+        { word: "important", sentence: "It's **important** to listen carefully." }
+    ]
+},
+  {
+    id: "year3-io",
+    label: "Year 3 Spelling: I-O",
+    date: "2024-03-11",
+    words: [
+        { word: "interest", sentence: "He showed great **interest** in learning to play guitar." },
+        { word: "island", sentence: "The desert **island** was surrounded by clear blue water." },
+        { word: "knowledge", sentence: "Reading books expands your **knowledge**." },
+        { word: "learn", sentence: "What new skill do you want to **learn**?" },
+        { word: "length", sentence: "Measure the **length** of the table with a ruler." },
+        { word: "library", sentence: "I borrowed a book from the local **library**." },
+        { word: "material", sentence: "The dress was made from a soft cotton **material**." },
+        { word: "medicine", sentence: "The doctor prescribed some **medicine** for his cough." },
+        { word: "mention", sentence: "Did I **mention** that I won the competition?" },
+        { word: "minute", sentence: "Wait just a **minute**, I'll be right there." },
+        { word: "natural", sentence: "The birds sang a **natural** and beautiful song." },
+        { word: "naughty", sentence: "The **naughty** puppy chewed on the shoe." },
+        { word: "notice", sentence: "Did you **notice** the new painting on the wall?" },
+        { word: "occasion", sentence: "It was a special **occasion** when the queen visited." },
+        { word: "often", sentence: "How **often** do you visit your grandparents?" },
+        { word: "opposite", sentence: "The bank is **opposite** the post office." },
+        { word: "ordinary", sentence: "It was just an **ordinary** day at school." }
+    ]
+},
+  {
+    id: "year3-pr",
+    label: "Year 3 Spelling: P-R",
+    date: "2024-03-12",
+    words: [
+        { word: "particular", sentence: "Do you have a **particular** favourite colour?" },
+        { word: "peculiar", sentence: "The cat had a **peculiar** habit of watching TV." },
+        { word: "perhaps", sentence: "**Perhaps** we can go to the park later." },
+        { word: "popular", sentence: "Football is a very **popular** sport." },
+        { word: "position", sentence: "Find your **position** on the starting line." },
+        { word: "possess", sentence: "Do you **possess** any special talents?" },
+        { word: "possible", sentence: "It is **possible** to fly to the moon." },
+        { word: "potatoes", sentence: "We are having roast **potatoes** for dinner." },
+        { word: "pressure", sentence: "The deep sea diver felt the immense **pressure** of the water." },
+        { word: "probably", sentence: "It will **probably** rain tomorrow." },
+        { word: "promise", sentence: "She made a **promise** to always tell the truth." },
+        { word: "purpose", sentence: "What is the **purpose** of this machine?" },
+        { word: "quarter", sentence: "I ate a **quarter** of the apple pie." },
+        { word: "question", sentence: "He asked a very difficult **question**." },
+        { word: "regular", sentence: "He follows a **regular** routine every morning." },
+        { word: "reign", sentence: "The queen's **reign** lasted for many years." }
+    ]
+},
+  {
+    id: "year3-sw",
+    label: "Year 3 Spelling: S-W",
+    date: "2024-03-13",
+    words: [
+        { word: "remember", sentence: "Can you **remember** what we learned yesterday?" },
+        { word: "sentence", sentence: "Every **sentence** starts with a capital letter." },
+        { word: "separate", sentence: "Please **separate** the paper from the plastic for recycling." },
+        { word: "special", sentence: "Today is a very **special** day." },
+        { word: "straight", sentence: "Draw a **straight** line with a ruler." },
+        { word: "strange", sentence: "I heard a **strange** noise coming from the attic." },
+        { word: "strength", sentence: "He showed great **strength** by lifting the heavy box." },
+        { word: "suppose", sentence: "I **suppose** we could go to the park if the rain stops." },
+        { word: "surprise", sentence: "The birthday party was a big **surprise**." },
+        { word: "therefore", sentence: "He studied hard, **therefore** he passed the exam." },
+        { word: "thought", sentence: "I **thought** you were coming to the party." },
+        { word: "through", sentence: "We walked **through** the long tunnel." },
+        { word: "variety", sentence: "The shop sells a **variety** of sweets." },
+        { word: "various", sentence: "There were **various** colours of balloons at the party." },
+        { word: "weight", sentence: "What is the **weight** of this package?" },
+        { word: "woman", sentence: "A kind **woman** helped the lost child." },
+        { word: "women", sentence: "The two **women** were talking happily." }
+    ]
+  }
+];
 
     // ----------------------
     // DOM refs & state
@@ -828,3 +977,4 @@
   </script>
 </body>
 </html>
+
