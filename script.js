@@ -714,14 +714,28 @@ function handleSubmit() {
             audio.play();
         }
     }
-    scoreEl.textContent = `Score: ${score} / ${currentWordIndex + 1}`;
+  scoreEl.textContent = `Score: ${score} / ${currentWordIndex + 1}`;
     updateProgressBar(isCorrect);
-
-    submitButtonEl.style.display = 'none'; // Hide submit button
-    continueButtonEl.style.display = 'block'; // Show continue button
-    continueButtonEl.focus(); // Focus continue button
     speak(correctWord); // Speak the correct word again AFTER feedback
-}
+
+    // Clear the sentence display after submission
+    contextDisplayEl.textContent = ''; 
+    contextDisplayEl.style.display = 'none';
+
+    if (isCorrect) {
+        // For correct answers, auto-advance after a short delay
+        submitButtonEl.style.display = 'none';
+        continueButtonEl.style.display = 'none'; // Ensure continue button is hidden
+        currentWordIndex++;
+        setTimeout(() => {
+            nextWord(); // Move to the next word automatically
+        }, 1500); // Give a moment for feedback to be seen/heard
+    } else {
+        // For incorrect answers, require a click to continue
+        submitButtonEl.style.display = 'none';
+        continueButtonEl.style.display = 'block'; // Show continue button
+        continueButtonEl.focus(); // Focus continue button
+    }
 
 function updateProgressBar(lastResult = null) {
     progressBarContainerEl.innerHTML = ''; // Clear existing segments
