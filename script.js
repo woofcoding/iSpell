@@ -15,7 +15,8 @@ const weeksData = [
       { word: "library", sentence: "I borrowed a book from the local library." },
       { word: "reign", sentence: "The queen's reign lasted for many years." }
     ]
-  },  {
+  },  
+  {
     id: "2023-11-24",
     label: "Mrs Street for 24/11/25",
     date: "2023-11-24",
