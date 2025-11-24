@@ -712,7 +712,7 @@ const weeksData = [
       for (const w of sorted) {
         const opt = document.createElement('option');
         opt.value = w.id;
-        opt.textContent = `${w.label} — ${w.date}`;
+        opt.textContent = `${w.label}`;
         weekSelectEl.appendChild(opt);
       }
       const defaultIndex = findMostRelevantWeekIndex(sorted);
@@ -1013,6 +1013,7 @@ const weeksData = [
   </script>
 </body>
 </html>
+
 
 
 
