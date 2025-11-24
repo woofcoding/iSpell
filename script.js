@@ -717,7 +717,7 @@ function nextWord() {
 function handleSubmit() {
     const userInput = inputEl.value.trim();
     const correctWord = spellingList[currentWordIndex].word;
-    const isCorrect = userInput.toLowerCase() === correctWord.toLowerCase();
+    const isCorrect = userInput === correctWord;
     
     // IMPORTANT: Clear the input field immediately after getting user input for current word
     inputEl.value = ''; 
