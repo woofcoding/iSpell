@@ -3,9 +3,22 @@
 // ======================
 const weeksData = [
   {
-    id: "2022-01-01",
+    id: "2023-12-01",
+    label: "Mrs Street for 01/12/25",
+    date: "2023-12-01",
+    words: [
+      { word: "answer", sentence: "Can you answer this question for me?" },
+      { word: "February", sentence: "February is the shortest month of the year." },
+      { word: "guard", sentence: "A security guard protected the museum." },
+      { word: "guide", sentence: "Our tour guide showed us around the city." },
+      { word: "island", sentence: "The desert island was surrounded by clear blue water." },
+      { word: "library", sentence: "I borrowed a book from the local library." },
+      { word: "reign", sentence: "The queen's reign lasted for many years." }
+    ]
+  },  {
+    id: "2023-11-24",
     label: "Mrs Street for 24/11/25",
-    date: "2022-01-22",
+    date: "2023-11-24",
     words: [
       { word: "accident", sentence: "The small accident scratched the car's paint." },
       { word: "accidentally", sentence: "He accidentally spilled his juice on the table." },
