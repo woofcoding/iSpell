@@ -242,6 +242,7 @@
       </table>
 
       <button id="menuButton">Menu</button>
+      <button id="startAgainButton">Start Again</button>
     </div>
   </div>
 
@@ -711,7 +712,7 @@ const weeksData = [
       for (const w of sorted) {
         const opt = document.createElement('option');
         opt.value = w.id;
-        opt.textContent = `${w.label}`;
+        opt.textContent = `${w.label} — ${w.date}`;
         weekSelectEl.appendChild(opt);
       }
       const defaultIndex = findMostRelevantWeekIndex(sorted);
@@ -1012,14 +1013,3 @@ const weeksData = [
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
