@@ -849,33 +849,37 @@ const weeksData = [
     function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 
     function checkSpelling() {
-      // Cancel any ongoing speech when the user submits their answer
-      speechSynthesis.cancel(); 
+  // Cancel any ongoing speech when the user submits their answer
+  speechSynthesis.cancel(); 
 
-      if (!spellingList || currentWordIndex >= spellingList.length) return;
-      const typed = inputEl.value.trim();
-      const correct = spellingList[currentWordIndex].word;
-      if (!typed) { messageEl.textContent = "⚠️ Please type a word first!"; return; }
-      const isCorrect = typed.toLowerCase() === correct.toLowerCase();
-      resultsLog.push({ index: currentWordIndex+1, submittedWord: typed, correctWord: correct, isCorrect });
-      toggleButtons(false);
-      if (isCorrect) {
-        playCorrectSound();
-        score++;
-        messageEl.textContent = "✅ Correct!";
-        currentWordIndex++;
-        updateScoreAndProgress();
-        setTimeout(nextStep, 700);
-      } else {
-        playWrongSound();
-        messageEl.textContent = `❌ Incorrect — correct: "${correct}".`;
-        currentWordIndex++;
-        updateScoreAndProgress();
-        // Show centered Continue button when incorrect
-        continueButtonEl.style.display = 'block';
-        continueButtonEl.focus();
-      }
-    }
+  if (!spellingList || currentWordIndex >= spellingList.length) return;
+  const typed = inputEl.value.trim();
+  const correct = spellingList[currentWordIndex].word; // e.g., "February" or "accident"
+
+  if (!typed) { messageEl.textContent = "⚠️ Please type a word first!"; return; }
+
+  // 💥 THE FIX: Require an exact match (case-sensitive) 💥
+  const isCorrect = typed === correct; 
+
+  resultsLog.push({ index: currentWordIndex+1, submittedWord: typed, correctWord: correct, isCorrect });
+  toggleButtons(false);
+  if (isCorrect) {
+    playCorrectSound();
+    score++;
+    messageEl.textContent = "✅ Correct!";
+    currentWordIndex++;
+    updateScoreAndProgress();
+    setTimeout(nextStep, 700);
+  } else {
+    playWrongSound();
+    messageEl.textContent = `❌ Incorrect — correct: "${correct}".`;
+    currentWordIndex++;
+    updateScoreAndProgress();
+    // Show centered Continue button when incorrect
+    continueButtonEl.style.display = 'block';
+    continueButtonEl.focus();
+  }
+}
 
     function nextStep(){
       if (currentWordIndex < spellingList.length) {
@@ -1013,3 +1017,4 @@ const weeksData = [
   </script>
 </body>
 </html>
+
