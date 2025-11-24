@@ -3,9 +3,9 @@
 // ======================
 const weeksData = [
   {
-    id: "2023-12-01",
+    id: "2025-12-01",
     label: "Mrs Street for 01/12/25",
-    date: "2023-12-01",
+    date: "2025-12-01",
     words: [
       { word: "answer", sentence: "Can you answer this question for me?" },
       { word: "February", sentence: "February is the shortest month of the year." },
@@ -17,9 +17,9 @@ const weeksData = [
     ]
   },  
   {
-    id: "2023-11-24",
+    id: "2025-11-24",
     label: "Mrs Street for 24/11/25",
-    date: "2023-11-24",
+    date: "2025-11-24",
     words: [
       { word: "accident", sentence: "The small accident scratched the car's paint." },
       { word: "accidentally", sentence: "He accidentally spilled his juice on the table." },
