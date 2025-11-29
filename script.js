@@ -11,7 +11,7 @@ const weeksData = [
     { "word": "niece", "sentence": "My favourite aunt came to visit with my young niece." },
     { "word": "brief", "sentence": "The meeting was quite brief, lasting only ten minutes." },
     { "word": "conceive", "sentence": "It is difficult to conceive of a time before the internet." },
-    { "word": "pierce", "sentence": "She decided to get her ears pierced on her birthday." },
+    { "word": "pierce", "sentence": "The needle is used to pierce the skin very quickly." },
     { "word": "fierce", "sentence": "The fierce wind howled outside the window all night." },
     { "word": "science", "sentence": "We learned about the properties of water in our science class." },
     { "word": "deceive", "sentence": "It is wrong to try and deceive someone with a dishonest answer." },
