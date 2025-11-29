@@ -3,6 +3,32 @@
 // ======================
 const weeksData = [
   {
+  "id": "2025-11-28",
+  "label": "Set 28 Nov — Test Fri 4 Dec 2025",
+  "date": "2025-11-28",
+  "words": [
+    { "word": "grief", "sentence": "It takes time to process the grief after losing a loved one." },
+    { "word": "niece", "sentence": "My favourite aunt came to visit with my young niece." },
+    { "word": "brief", "sentence": "The meeting was quite brief, lasting only ten minutes." },
+    { "word": "conceive", "sentence": "It is difficult to conceive of a time before the internet." },
+    { "word": "pierce", "sentence": "She decided to get her ears pierced on her birthday." },
+    { "word": "fierce", "sentence": "The fierce wind howled outside the window all night." },
+    { "word": "science", "sentence": "We learned about the properties of water in our science class." },
+    { "word": "deceive", "sentence": "It is wrong to try and deceive someone with a dishonest answer." },
+    { "word": "pier", "sentence": "We walked out onto the wooden pier to look at the sea." },
+    { "word": "patient", "sentence": "You must be patient when waiting for the bus to arrive." },
+    { "word": "protein", "sentence": "Meat, eggs, and beans are all good sources of protein." },
+    { "word": "perceive", "sentence": "The way you choose to perceive a problem can change everything." },
+    { "word": "thief", "sentence": "The security guard quickly caught the thief trying to steal the jewels." },
+    { "word": "seize", "sentence": "You should always try to seize an opportunity when it comes along." },
+    { "word": "ceiling", "sentence": "The room had a beautiful chandelier hanging from the ceiling." },
+    { "word": "mischief", "sentence": "The children got into a bit of mischief when the babysitter wasn't looking." },
+    { "word": "friend", "sentence": "My best friend is moving away next week, and I will miss them." },
+    { "word": "receive", "sentence": "I hope to receive a letter from my pen pal soon." },
+    { "word": "glacier", "sentence": "A massive glacier slowly moved down the mountain valley." }
+  ]
+},
+  {
     id: "2025-12-01",
     label: "Mrs Street for 01/12/25",
     date: "2025-12-01",
